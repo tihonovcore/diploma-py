@@ -1,20 +1,16 @@
 import json
-from os.path import abspath, curdir, join
+
+from configuration import Configuration
 
 
-def process_dataset():
-    dataset_path = abspath(curdir)
-    if dataset_path.endswith('content'):
-        dataset_path = join(dataset_path, 'model')
-    dataset_path = join(dataset_path, 'dataset')
-
-    with open(join(dataset_path, 'integer2string.json'), 'r') as file:
+def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
+    with open(Configuration.integer2string_json, 'r') as file:
         index2word = json.load(file)
         for (k, v) in list(index2word.items()):
             index2word.pop(k)
             index2word[int(k)] = v
 
-    with open(join(dataset_path, 'string2integer.json'), 'r') as file:
+    with open(Configuration.string2integer_json, 'r') as file:
         word2index = json.load(file)
 
     print(list(index2word.items()))
@@ -26,7 +22,7 @@ def process_dataset():
     composed = []
     targets = []
 
-    with open(join(dataset_path, 'dataset.json'), 'r') as file:
+    with open(path_to_dataset_json, 'r') as file:
         for line in file:
             for sample in json.loads(line):
                 leaf_paths = sample["leafPaths"]

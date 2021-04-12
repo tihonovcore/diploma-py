@@ -10,7 +10,7 @@ https://arxiv.org/pdf/1910.00577.pdf
 !python model/fit.py
 ```
 
-#### predict
+#### predict on train dataset 
 ```
-# todo
+!python model/predict.py --json_path=dataset/dataset.json
 ```
