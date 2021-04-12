@@ -12,5 +12,5 @@ https://arxiv.org/pdf/1910.00577.pdf
 
 #### predict on train dataset 
 ```
-!python model/predict.py --json_path=dataset/dataset.json
+!python model/predict.py --json_path=/content/model/dataset/dataset.json
 ```
