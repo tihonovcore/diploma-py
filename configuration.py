@@ -1,10 +1,10 @@
-from os.path import abspath, curdir, join
+import pathlib
+
+from os.path import join
 
 
 class Configuration:
-    root_path = abspath(curdir)
-    if root_path.endswith('content'):
-        root_path = join(root_path, 'model')
+    root_path = pathlib.Path(__file__).parent.absolute()
 
     integer2string_json = join(root_path, 'dataset', 'integer2string.json')
     string2integer_json = join(root_path, 'dataset', 'string2integer.json')

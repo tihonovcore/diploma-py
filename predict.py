@@ -1,7 +1,7 @@
 import getopt
 import sys
+import tensorflow as tf
 
-from actions.evaluate_statistics import evaluate_statistics
 from actions.process_dataset import process_dataset
 from configuration import Configuration
 from implementation.slm import SLM
@@ -19,4 +19,8 @@ if __name__ == '__main__':
     slm = SLM(vocab_size=110, embedding_dim=32, batch_size=20, rnn_units=64, ff_dim=64)
     slm.load_weights(Configuration.saved_model)
 
-    evaluate_statistics(TEST_BEGIN=8000, TEST_END=9000, composed=composed, targets=targets, slm=slm, index2word=integer2string)
+    result = slm.call(tf.ragged.constant(composed))
+    result = tf.argmax(result, axis=1).numpy()
+    result = list(map(lambda t: integer2string[t], result))
+    for r in result:
+        print(r)

@@ -13,9 +13,6 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
     with open(Configuration.string2integer_json, 'r') as file:
         word2index = json.load(file)
 
-    print(list(index2word.items()))
-    print(list(word2index.items())[:5])
-
     def to_vector(n):
         return [1.0 if n == i else 0.0 for i in range(110)]
 
@@ -32,8 +29,5 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
 
                 composed.append(leaf_paths + [root_path])
                 targets.append(to_vector(target))
-
-    print(composed[:3])
-    print(targets[:3])
 
     return composed, targets, index2word
