@@ -17,7 +17,7 @@ def train_model(composed, targets, USE_N_SAMPLES):
 
     shuffle(train_dataset)
 
-    slm = SLM(vocab_size=110, embedding_dim=32, batch_size=USE_N_SAMPLES, rnn_units=64, ff_dim=64)
+    slm = SLM(vocab_size=111, embedding_dim=32, batch_size=USE_N_SAMPLES, rnn_units=64, ff_dim=64)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 

@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     composed, targets, integer2string = process_dataset(path_to_sample)
 
-    slm = SLM(vocab_size=110, embedding_dim=32, batch_size=20, rnn_units=64, ff_dim=64)
+    slm = SLM(vocab_size=111, embedding_dim=32, batch_size=20, rnn_units=64, ff_dim=64)
     slm.load_weights(Configuration.saved_model)
 
     result = slm.call(tf.ragged.constant(composed))
