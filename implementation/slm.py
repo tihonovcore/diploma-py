@@ -15,7 +15,7 @@ class SLM(keras.Model):
             path_embedding_dim=Configuration.path_embedding_dim,
             batch_size=5,
             name="structural_language_model",
-            print_shape=False,
+            print_shape=Configuration.print_shape,
             **kwargs
     ):
         super(SLM, self).__init__(name=name, **kwargs)
@@ -23,7 +23,8 @@ class SLM(keras.Model):
 
         self.node_embedding = layers.Embedding(vocabulary_size, node_embedding_dim,
                                                batch_input_shape=[batch_size, None])
-        self.lstm = layers.LSTM(path_embedding_dim)
+        self.lstm_1 = layers.LSTM(path_embedding_dim, return_sequences=True)
+        self.lstm_2 = layers.LSTM(path_embedding_dim)
         self.transformer = keras.Sequential([Encoder(), Encoder(), Encoder(), Encoder()])
 
         W_init = tf.random_normal_initializer()
@@ -59,11 +60,12 @@ class SLM(keras.Model):
         if self.print_shape: print('all_paths.shape: %s' % all_paths.shape)
 
         # (samples * paths_count, len_paths, node_embedding) --> (samples * paths_count, path_embedding)
-        H = self.lstm(all_paths)
+        H = self.lstm_1(all_paths)
+        H = self.lstm_2(H)
 
         # (samples * paths_count, path_embedding) --> (samples, paths_count, path_embedding)
         H = tf.RaggedTensor.from_row_lengths(H, paths_count)
-        if self.print_shape:  print('H.shape: %s' % str(H.shape))
+        if self.print_shape: print('H.shape: %s' % str(H.shape))
 
         # extract `root_paths` from `H`
         # print(H.row_lengths())
