@@ -33,4 +33,5 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
                 composed.append(leaf_paths + [root_path])
                 targets.append(to_vector(target))
 
+    # todo: shuffle dataset
     return composed, targets, index2word

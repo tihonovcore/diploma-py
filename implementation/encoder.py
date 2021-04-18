@@ -1,13 +1,21 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from configuration import Configuration
+
 
 class Encoder(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+    def __init__(
+            self,
+            path_embedding_dim=Configuration.path_embedding_dim,
+            encoder_attention_heads_count=Configuration.encoder_attention_heads_count,
+            encoder_ff_first_layer_dim=Configuration.encoder_ff_first_layer_dim,
+            rate=0.1
+    ):
         super(Encoder, self).__init__()
-        self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.att = layers.MultiHeadAttention(num_heads=encoder_attention_heads_count, key_dim=path_embedding_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim)]
+            [layers.Dense(encoder_ff_first_layer_dim, activation="relu"), layers.Dense(path_embedding_dim)]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)

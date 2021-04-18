@@ -8,15 +8,12 @@ from implementation.encoder import Encoder
 
 
 class SLM(keras.Model):
-    # TODO: переименовать на понятные имена
     def __init__(
             self,
-            vocab_size=Configuration.vocabulary_size,
-            embedding_dim=Configuration.node_embedding_dim,
+            vocabulary_size=Configuration.vocabulary_size,
+            node_embedding_dim=Configuration.node_embedding_dim,
+            path_embedding_dim=Configuration.path_embedding_dim,
             batch_size=5,
-            rnn_units=Configuration.path_embedding_dim,
-            num_heads=Configuration.encoder_attention_heads_count,  # TODO: из-за этого меняется рамерность выхода энкодера, как быть?
-            ff_dim=Configuration.encoder_ff_first_layer_dim,
             name="structural_language_model",
             print_shape=False,
             **kwargs
@@ -24,22 +21,18 @@ class SLM(keras.Model):
         super(SLM, self).__init__(name=name, **kwargs)
         self.print_shape = print_shape
 
-        self.node_embedding = layers.Embedding(vocab_size, embedding_dim, batch_input_shape=[batch_size, None])
-        self.lstm = layers.LSTM(rnn_units)
-        self.transformer = keras.Sequential([
-            Encoder(rnn_units, num_heads, ff_dim),
-            Encoder(rnn_units, num_heads, ff_dim),
-            Encoder(rnn_units, num_heads, ff_dim),
-            Encoder(rnn_units, num_heads, ff_dim)
-        ])
+        self.node_embedding = layers.Embedding(vocabulary_size, node_embedding_dim,
+                                               batch_input_shape=[batch_size, None])
+        self.lstm = layers.LSTM(path_embedding_dim)
+        self.transformer = keras.Sequential([Encoder(), Encoder(), Encoder(), Encoder()])
 
         W_init = tf.random_normal_initializer()
         self.W_r = tf.Variable(
-            initial_value=W_init(shape=(rnn_units, rnn_units), dtype="float32"),
+            initial_value=W_init(shape=(path_embedding_dim, path_embedding_dim), dtype="float32"),
             trainable=True,
         )
         self.W_g = tf.Variable(
-            initial_value=W_init(shape=(2 * rnn_units, embedding_dim), dtype="float32"),
+            initial_value=W_init(shape=(2 * path_embedding_dim, node_embedding_dim), dtype="float32"),
             trainable=True
         )
 
