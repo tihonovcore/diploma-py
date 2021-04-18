@@ -1,21 +1,23 @@
 import tensorflow as tf
+
+from configuration import Configuration
 from numpy import argmax
 
 
-def evaluate_statistics(TEST_BEGIN, TEST_END, composed, targets, slm, index2word):
+def evaluate_statistics(evaluate_begin, evaluate_end, composed, targets, slm, index2word):
     actual = []
     real = []
 
     ok = 0
-    step = 10
-    for b in range(TEST_BEGIN, TEST_END, step):
+    batch_size = Configuration.test_batch_size
+    for b in range(evaluate_begin, evaluate_end, batch_size):
         if b % 100 == 0:
             print('b: %d' % b)
 
-        result = slm.call(tf.ragged.constant(composed[b:b + step]))
+        result = slm.call(tf.ragged.constant(composed[b:b + batch_size]))
 
         actual_batch = tf.argmax(result, axis=1).numpy()
-        real_batch = tf.argmax(targets[b:b + step], axis=1).numpy()
+        real_batch = tf.argmax(targets[b:b + batch_size], axis=1).numpy()
 
         actual.extend(actual_batch)
         real.extend(real_batch)
@@ -24,10 +26,10 @@ def evaluate_statistics(TEST_BEGIN, TEST_END, composed, targets, slm, index2word
         if (a == r):
             ok += 1
 
-    print('test accuracy: %f' % (ok / (TEST_END - TEST_BEGIN)))
+    print('test accuracy: %f' % (ok / (evaluate_end - evaluate_begin)))
 
     real_stat = {}
-    for target in targets[TEST_BEGIN:TEST_END]:
+    for target in targets[evaluate_begin:evaluate_end]:
         t = argmax(target)
         real_stat.setdefault(t, 0)
         real_stat[t] += 1

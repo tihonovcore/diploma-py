@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from configuration import Configuration
 from implementation.encoder import Encoder
 
 
@@ -10,12 +11,12 @@ class SLM(keras.Model):
     # TODO: переименовать на понятные имена
     def __init__(
             self,
-            vocab_size=10,
-            embedding_dim=5,
+            vocab_size=Configuration.vocabulary_size,
+            embedding_dim=Configuration.node_embedding_dim,
             batch_size=5,
-            rnn_units=10,
-            num_heads=1,  # TODO: из-за этого меняется рамерность выхода энкодера, как быть?
-            ff_dim=10,
+            rnn_units=Configuration.path_embedding_dim,
+            num_heads=Configuration.encoder_attention_heads_count,  # TODO: из-за этого меняется рамерность выхода энкодера, как быть?
+            ff_dim=Configuration.encoder_ff_first_layer_dim,
             name="structural_language_model",
             print_shape=False,
             **kwargs

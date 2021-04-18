@@ -13,8 +13,11 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
     with open(Configuration.string2integer_json, 'r') as file:
         word2index = json.load(file)
 
+    assert Configuration.vocabulary_size == len(index2word)
+    assert Configuration.vocabulary_size == len(word2index)
+
     def to_vector(n):
-        return [1.0 if n == i else 0.0 for i in range(110)]
+        return [1.0 if n == i else 0.0 for i in range(Configuration.vocabulary_size)]
 
     composed = []
     targets = []

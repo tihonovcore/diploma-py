@@ -16,14 +16,14 @@ if __name__ == '__main__':
 
     composed, targets, integer2string = process_dataset(path_to_sample)
 
-    slm = SLM(vocab_size=111, embedding_dim=32, batch_size=20, rnn_units=64, ff_dim=64)
+    slm = SLM(batch_size=20)  # todo: wtf is batch_size?
     slm.load_weights(Configuration.saved_model)
 
     result = []
 
-    step = 10
-    for begin in range(0, len(composed), step):
-        batch_result = slm.call(tf.ragged.constant(composed[begin:begin + step]))
+    batch_size = Configuration.predict_batch_size
+    for begin in range(0, len(composed), batch_size):
+        batch_result = slm.call(tf.ragged.constant(composed[begin:begin + batch_size]))
         batch_result = tf.argmax(batch_result, axis=1).numpy()
         batch_result = list(map(lambda t: integer2string[t], batch_result))
         result.extend(batch_result)

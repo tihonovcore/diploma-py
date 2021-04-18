@@ -7,7 +7,7 @@ class Encoder(layers.Layer):
         super(Encoder, self).__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim), ]
+            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim)]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)

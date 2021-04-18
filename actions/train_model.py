@@ -1,30 +1,32 @@
+from configuration import Configuration
 from implementation.slm import SLM
 from random import shuffle
 
 import tensorflow as tf
 
 
-def train_model(composed, targets, USE_N_SAMPLES):
-    all_features = tf.ragged.constant(composed[:USE_N_SAMPLES], dtype='float32')
-    all_targets = tf.constant(targets[:USE_N_SAMPLES])
+def train_model(composed, targets):
+    dataset_size = Configuration.train_dataset_size
+
+    all_features = tf.ragged.constant(composed[:dataset_size], dtype='float32')
+    all_targets = tf.constant(targets[:dataset_size])
     all_targets = tf.argmax(all_targets, axis=1)
 
-    BATCH_SIZE = 10
-    TRAIN_SIZE = USE_N_SAMPLES
-    train_features = [all_features[i:i + BATCH_SIZE] for i in range(0, TRAIN_SIZE, BATCH_SIZE)]
-    train_targets = [all_targets[i:i + BATCH_SIZE] for i in range(0, TRAIN_SIZE, BATCH_SIZE)]
+    batch_size = Configuration.train_batch_size
+    train_features = [all_features[i:i + batch_size] for i in range(0, dataset_size, batch_size)]
+    train_targets = [all_targets[i:i + batch_size] for i in range(0, dataset_size, batch_size)]
     train_dataset = list(zip(train_features, train_targets))
 
     shuffle(train_dataset)
 
-    slm = SLM(vocab_size=111, embedding_dim=32, batch_size=USE_N_SAMPLES, rnn_units=64, ff_dim=64)
+    slm = SLM(batch_size=20)  # todo: wtf is batch_sze?
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
 
-    for epoch in range(2):
+    for epoch in range(Configuration.epochs_count):
         print("Start of epoch %d" % epoch)
 
         for batch_number, (x_batch, y_batch) in enumerate(train_dataset):
@@ -37,8 +39,8 @@ def train_model(composed, targets, USE_N_SAMPLES):
             grads = tape.gradient(ls, slm.trainable_weights)
             optimizer.apply_gradients(zip(grads, slm.trainable_weights))
 
-            if batch_number % (TRAIN_SIZE / 100) == 0:
-                percent = batch_number / (TRAIN_SIZE / 100)
-                print("%d METRIC = %.4f" % (percent, metric.result()))
+            if ((batch_number + 1) * batch_size) % (dataset_size / 10) == 0:
+                percent = ((batch_number + 1) * batch_size) / (dataset_size / 100)
+                print("%d%% METRIC = %.4f" % (percent, metric.result()))
 
     return slm
