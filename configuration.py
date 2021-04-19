@@ -27,7 +27,7 @@ class Configuration:
     node_embedding_dim = 32
     path_embedding_dim = 128
     encoder_ff_first_layer_dim = 128
-    encoder_attention_heads_count = 8  # TODO: из-за этого меняется рамерность выхода энкодера, как быть?
-    max_child_index = 15
+    encoder_attention_heads_count = 8
+    max_child_index = 16  # [0; 15]
 
     epochs_count = 2

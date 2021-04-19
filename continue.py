@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     slm = SLM(batch_size=20)  # todo: wtf is batch_size?
     slm.load_weights(Configuration.saved_model)
-    slm = train_model(composed, targets, slm)
+    slm = train_model(composed, target_indices, targets, slm)
     evaluate_statistics(
         Configuration.test_dataset_begin,
         Configuration.test_dataset_end,

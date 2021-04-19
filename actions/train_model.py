@@ -19,8 +19,6 @@ def train_model(composed, target_indices, targets, slm=SLM(batch_size=20)):
     train_targets = [all_targets[i:i + batch_size] for i in range(0, dataset_size, batch_size)]
     train_dataset = list(zip(train_features, train_target_indices, train_targets))
 
-    shuffle(train_dataset)
-
     # slm = SLM(batch_size=20)  # todo: wtf is batch_sze?
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)

@@ -1,6 +1,7 @@
 import json
 
 from configuration import Configuration
+from random import shuffle
 
 
 def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
@@ -35,5 +36,8 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
                 target_indices.append(index_among_brothers)
                 targets.append(to_vector(target))
 
-    # todo: shuffle dataset
+    zipped = list(zip(composed, target_indices, targets))
+    shuffle(zipped)
+    composed, target_indices, targets = list(zip(*zipped))
+
     return composed, target_indices, targets, index2word
