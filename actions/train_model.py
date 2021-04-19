@@ -5,7 +5,7 @@ from random import shuffle
 import tensorflow as tf
 
 
-def train_model(composed, targets):
+def train_model(composed, targets, slm=SLM(batch_size=20)):
     dataset_size = Configuration.train_dataset_size
 
     all_features = tf.ragged.constant(composed[:dataset_size], dtype='float32')
@@ -19,7 +19,7 @@ def train_model(composed, targets):
 
     shuffle(train_dataset)
 
-    slm = SLM(batch_size=20)  # todo: wtf is batch_sze?
+    # slm = SLM(batch_size=20)  # todo: wtf is batch_sze?
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 
