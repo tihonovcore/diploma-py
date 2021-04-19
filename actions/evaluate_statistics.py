@@ -4,20 +4,23 @@ from configuration import Configuration
 from numpy import argmax
 
 
-def evaluate_statistics(evaluate_begin, evaluate_end, composed, targets, slm, index2word):
+def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, targets, slm, index2word):
     actual = []
     real = []
 
     ok = 0
     batch_size = Configuration.test_batch_size
-    for b in range(evaluate_begin, evaluate_end, batch_size):
-        if b % 100 == 0:
-            print('b: %d' % b)
+    for begin in range(evaluate_begin, evaluate_end, batch_size):
+        if begin % 100 == 0:
+            print('begin: %d' % begin)
 
-        result = slm.call(tf.ragged.constant(composed[b:b + batch_size]))
+        composed_batch = tf.ragged.constant(composed[begin:begin + batch_size])
+        indices_batch = tf.constant(target_indices[begin:begin + batch_size])
+
+        result = slm.call((composed_batch, indices_batch))
 
         actual_batch = tf.argmax(result, axis=1).numpy()
-        real_batch = tf.argmax(targets[b:b + batch_size], axis=1).numpy()
+        real_batch = tf.argmax(targets[begin:begin + batch_size], axis=1).numpy()
 
         actual.extend(actual_batch)
         real.extend(real_batch)

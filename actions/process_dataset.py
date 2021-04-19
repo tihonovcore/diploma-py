@@ -20,6 +20,7 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
         return [1.0 if n == i else 0.0 for i in range(Configuration.vocabulary_size)]
 
     composed = []
+    target_indices = []
     targets = []
 
     with open(path_to_dataset_json, 'r') as file:
@@ -31,7 +32,8 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
                 target = sample["target"]
 
                 composed.append(leaf_paths + [root_path])
+                target_indices.append(index_among_brothers)
                 targets.append(to_vector(target))
 
     # todo: shuffle dataset
-    return composed, targets, index2word
+    return composed, target_indices, targets, index2word

@@ -35,14 +35,17 @@ class SLM(keras.Model):
             initial_value=W_init(shape=(2 * path_embedding_dim, node_embedding_dim), dtype="float32"),
             trainable=True
         )
-
-        # TODO
-        # self.C_i = None
+        self.C_i = tf.Variable(
+            initial_value=W_init(shape=(Configuration.max_child_index, path_embedding_dim, path_embedding_dim), dtype="float32"),
+            trainable=True
+        )
 
         self.relu = layers.ReLU()
         self.soft = layers.Activation('softmax')
 
     def call(self, inputs):
+        inputs, target_indices = inputs
+
         if self.print_shape: print('inputs.shape: %s' % inputs.shape)
 
         # (samples, paths_count, len_paths) --> (samples, paths_count, len_paths, node_embedding)
@@ -62,7 +65,7 @@ class SLM(keras.Model):
         H = tf.RaggedTensor.from_row_lengths(H, paths_count)
         if self.print_shape:  print('H.shape: %s' % str(H.shape))
 
-        # exctract `root_paths` from `H`
+        # extract `root_paths` from `H`
         # print(H.row_lengths())
         R = H[:, -1:, :].to_tensor()
         H = H[:, :-1, :]
@@ -107,7 +110,12 @@ class SLM(keras.Model):
         if self.print_shape: print('Z.shape: %s' % Z.shape)
 
         # work with root paths
-        R = tf.matmul(self.relu(R), self.W_r)  # TODO: C_i
+        C = tf.map_fn(lambda i: self.C_i[i], target_indices, dtype='float32')
+        R = tf.reshape(R, (samples, path_emb, 1))
+        R = tf.matmul(C, R)
+        R = tf.reshape(R, (samples, path_emb))
+        R = tf.matmul(self.relu(R), self.W_r)
+
         if self.print_shape: print('R.shape %s' % R.shape)
 
         # weighted sum of leaf paths
