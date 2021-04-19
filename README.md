@@ -15,7 +15,12 @@ from google.colab import files
 files.download("/content/weights.zip")
 ```
 
-#### predict on train dataset 
+#### continue training on google.colab
+```
+!python model/continue.py
+```
+
+#### predict on train dataset on google.colab
 ```
 !python model/predict.py --json_path=/content/model/dataset/dataset.json
 ```
