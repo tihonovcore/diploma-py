@@ -6,11 +6,19 @@ from os.path import join
 class Configuration:
     root_path = pathlib.Path(__file__).parent.absolute()
 
-    integer2string_json = join(root_path, 'dataset', 'integer2string.json')
-    string2integer_json = join(root_path, 'dataset', 'string2integer.json')
-    train_dataset_json = join(root_path, 'dataset', 'dataset.json')
+    # dataset = 'dataset'
+    dataset = 'filtered_deep'
+    # dataset = 'subsampled'
 
-    saved_model = join(root_path, 'saved_model', 'model')
+    integer2string_json = join(root_path, dataset, 'integer2string.json')
+    string2integer_json = join(root_path, dataset, 'string2integer.json')
+    train_dataset_json = join(root_path, dataset, 'dataset.json')
+
+    # saved_model = 'saved_model'
+    saved_model = 'filtered_deep_model'
+    # saved_model = 'subsampled_model'
+
+    saved_model = join(root_path, saved_model, 'model')
 
     print_shape = False
 
@@ -18,6 +26,18 @@ class Configuration:
     test_dataset_size = 993
     test_dataset_begin = 8000
     test_dataset_end = 8993
+
+    if dataset == 'filtered_deep':
+        train_dataset_size = 4000
+        test_dataset_size = 1084
+        test_dataset_begin = 4000
+        test_dataset_end = 5084
+
+    if dataset == 'subsampled':
+        train_dataset_size = 4000
+        test_dataset_size = 982
+        test_dataset_begin = 4000
+        test_dataset_end = 4982
 
     train_batch_size = 10
     test_batch_size = 10
