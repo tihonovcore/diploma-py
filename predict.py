@@ -1,7 +1,10 @@
 import getopt
 import sys
+import random
+
 import tensorflow as tf
 
+from actions.evaluate_statistics import parent_id_to_children_ids
 from actions.process_dataset import process_dataset
 from configuration import Configuration
 from implementation.slm import SLM
@@ -27,10 +30,15 @@ if __name__ == '__main__':
         indices_batch = tf.constant(target_indices[begin:begin + batch_size])
 
         batch_result = slm.call((composed_batch, indices_batch))
-        batch_result = tf.argmax(batch_result, axis=1).numpy()
-        batch_result = list(map(lambda t: integer2string[t], batch_result))
 
-        result.extend(batch_result)
+        for (res, cmp) in zip(batch_result, composed_batch):
+            parent_id = cmp[-1][-1].numpy()
+            children_ids = parent_id_to_children_ids(parent_id, integer2string)
+
+            _, predicted = tf.nn.top_k(tf.gather(res, children_ids), k=min(5, len(children_ids)))
+            random_choice = random.choice(list(map(lambda pred: children_ids[pred], predicted.numpy())))
+            random_choice = integer2string[random_choice]
+            result.append(random_choice)
 
     for r in result:
         print(r)
