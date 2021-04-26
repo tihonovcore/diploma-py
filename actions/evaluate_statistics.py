@@ -6,9 +6,9 @@ from numpy import argmax
 
 def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, targets, slm, index2word):
     actual = []
+    actual_top_5 = []
     real = []
 
-    ok = 0
     batch_size = Configuration.test_batch_size
     for begin in range(evaluate_begin, evaluate_end, batch_size):
         if begin % 100 == 0:
@@ -19,17 +19,28 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
 
         result = slm.call((composed_batch, indices_batch))
 
+        _, top_5_indices = tf.nn.top_k(result, 5)
+        actual_top_5.extend(top_5_indices)
+
         actual_batch = tf.argmax(result, axis=1).numpy()
         real_batch = tf.argmax(targets[begin:begin + batch_size], axis=1).numpy()
 
         actual.extend(actual_batch)
         real.extend(real_batch)
 
+    ok = 0
     for (a, r) in list(zip(actual, real)):
         if (a == r):
             ok += 1
 
-    print('test accuracy: %f' % (ok / (evaluate_end - evaluate_begin)))
+    print('test accuracy@1: %f' % (ok / (evaluate_end - evaluate_begin)))
+
+    ok = 0
+    for (a, r) in list(zip(actual_top_5, real)):
+        if (r in a):
+            ok += 1
+
+    print('test accuracy@5: %f' % (ok / (evaluate_end - evaluate_begin)))
 
     real_stat = {}
     for target in targets[evaluate_begin:evaluate_end]:
