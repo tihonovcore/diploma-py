@@ -14,10 +14,10 @@ class Configuration:
 
     print_shape = False
 
-    train_dataset_size = 8000
-    test_dataset_size = 993
-    test_dataset_begin = 8000
-    test_dataset_end = 8993
+    train_dataset_size = 4000
+    test_dataset_size = 950
+    test_dataset_begin = 4000
+    test_dataset_end = 4950
 
     train_batch_size = 10
     test_batch_size = 10
