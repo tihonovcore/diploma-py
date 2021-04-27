@@ -1,7 +1,17 @@
 import json
 
+from actions.evaluate_statistics import parent_id_to_children_ids
 from configuration import Configuration
 from random import shuffle
+
+
+class ProcessedDataset:
+    def __init__(self, composed, target_indices, targets, integer2string, string2integer):
+        self.composed = composed
+        self.target_indices = target_indices
+        self.targets = targets
+        self.integer2string = integer2string
+        self.string2integer = string2integer
 
 
 def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
@@ -45,4 +55,4 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
     shuffle(zipped)
     composed, target_indices, targets = list(zip(*zipped))
 
-    return composed, target_indices, targets, index2word
+    return ProcessedDataset(composed, target_indices, targets, index2word, word2index)

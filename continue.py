@@ -5,19 +5,16 @@ from configuration import Configuration
 from implementation.slm import SLM
 
 if __name__ == '__main__':
-    composed, target_indices, targets, integer2string = process_dataset()
+    processed_dataset = process_dataset()
 
     slm = SLM(batch_size=20)  # todo: wtf is batch_size?
     slm.load_weights(Configuration.saved_model)
-    slm = train_model(composed, target_indices, targets, slm)
+    slm = train_model(processed_dataset, slm)
     evaluate_statistics(
         Configuration.test_dataset_begin,
         Configuration.test_dataset_end,
-        composed,
-        target_indices,
-        targets,
-        slm,
-        integer2string
+        processed_dataset,
+        slm
     )
 
     slm.save_weights(Configuration.saved_model)

@@ -5,12 +5,12 @@ from random import shuffle
 import tensorflow as tf
 
 
-def train_model(composed, target_indices, targets, slm=SLM(batch_size=20)):
+def train_model(processed_dataset, slm=SLM(batch_size=20)):
     dataset_size = Configuration.train_dataset_size
 
-    all_features = tf.ragged.constant(composed[:dataset_size], dtype='float32')
-    all_target_indices = tf.constant(target_indices[:dataset_size])
-    all_targets = tf.constant(targets[:dataset_size])
+    all_features = tf.ragged.constant(processed_dataset.composed[:dataset_size], dtype='float32')
+    all_target_indices = tf.constant(processed_dataset.target_indices[:dataset_size])
+    all_targets = tf.constant(processed_dataset.targets[:dataset_size])
     all_targets = tf.argmax(all_targets, axis=1)
 
     batch_size = Configuration.train_batch_size

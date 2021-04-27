@@ -20,7 +20,7 @@ def parent_id_to_children_ids(parent_id, integer2string):
     return list(map(lambda child: string2integer[child], children_strings))
 
 
-def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, targets, slm, index2word):
+def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
     real = []
 
     actual = []
@@ -34,14 +34,14 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
         if begin % 100 == 0:
             print('begin: %d' % begin)
 
-        composed_batch = tf.ragged.constant(composed[begin:begin + batch_size])
-        indices_batch = tf.constant(target_indices[begin:begin + batch_size])
+        composed_batch = tf.ragged.constant(processed_dataset.composed[begin:begin + batch_size])
+        indices_batch = tf.constant(processed_dataset.target_indices[begin:begin + batch_size])
 
         result = slm.call((composed_batch, indices_batch))
 
         for (res, cmp) in zip(result, composed_batch):
             parent_id = cmp[-1][-1].numpy()
-            children_ids = parent_id_to_children_ids(parent_id, index2word)
+            children_ids = parent_id_to_children_ids(parent_id, processed_dataset.integer2string)
 
             _, predicted = tf.nn.top_k(tf.gather(res, children_ids), k=1)
             gram_acc_1.append(children_ids[predicted.numpy()[0]])
@@ -53,7 +53,7 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
         actual_top_5.extend(top_5_indices)
 
         actual_batch = tf.argmax(result, axis=1).numpy()
-        real_batch = tf.argmax(targets[begin:begin + batch_size], axis=1).numpy()
+        real_batch = tf.argmax(processed_dataset.targets[begin:begin + batch_size], axis=1).numpy()
 
         actual.extend(actual_batch)
         real.extend(real_batch)
@@ -87,7 +87,7 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
     print('test naive_grammar_accuracy@<=5: %f' % (ok / (evaluate_end - evaluate_begin)))
 
     real_stat = {}
-    for target in targets[evaluate_begin:evaluate_end]:
+    for target in processed_dataset.targets[evaluate_begin:evaluate_end]:
         t = argmax(target)
         real_stat.setdefault(t, 0)
         real_stat[t] += 1
@@ -109,7 +109,7 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
 
         actual_count = actual_tp_stat[real_index]
 
-        print('%d / %d\t= %f \t %s' % (actual_count, real_count, actual_count / real_count, index2word[real_index]))
+        print('%d / %d\t= %f \t %s' % (actual_count, real_count, actual_count / real_count, processed_dataset.integer2string[real_index]))
 
     print("\n\n\nFALSE POSITIVE STAT")
     for (real_index, real_count) in real_stat.items():
@@ -120,4 +120,4 @@ def evaluate_statistics(evaluate_begin, evaluate_end, composed, target_indices, 
             continue
 
         for index, freq in sorted(stat.items(), key=lambda s: s[1], reverse=True)[:3]:
-            print('%d \t %s --> %s' % (freq, index2word[real_index], index2word[index]))
+            print('%d \t %s --> %s' % (freq, processed_dataset.integer2string[real_index], processed_dataset.integer2string[index]))

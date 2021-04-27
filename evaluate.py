@@ -14,7 +14,7 @@ if __name__ == '__main__':
         print('evaluate.py --json_path="/absolute/path/to/sample.json"')
         sys.exit(2)
 
-    composed, target_indices, targets, integer2string = process_dataset(path_to_sample)
+    processed_dataset = process_dataset(path_to_sample)
 
     slm = SLM(batch_size=20)  # todo: wtf is batch_size?
     slm.load_weights(Configuration.saved_model)
@@ -22,9 +22,6 @@ if __name__ == '__main__':
     evaluate_statistics(
         0,
         4950,
-        composed,
-        target_indices,
-        targets,
-        slm,
-        integer2string
+        processed_dataset,
+        slm
     )
