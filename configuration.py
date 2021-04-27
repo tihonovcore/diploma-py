@@ -31,4 +31,6 @@ class Configuration:
     encoder_attention_heads_count = 8
     max_child_index = 16  # [0; 15]
 
+    loss_alpha = 2.0
+
     epochs_count = 2
