@@ -36,6 +36,11 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
                 target_indices.append(index_among_brothers)
                 targets.append(to_vector(target))
 
+    dataset_size = Configuration.train_dataset_size + Configuration.test_dataset_size
+    assert len(composed) == dataset_size
+    assert len(target_indices) == dataset_size
+    assert len(targets) == dataset_size
+
     zipped = list(zip(composed, target_indices, targets))
     shuffle(zipped)
     composed, target_indices, targets = list(zip(*zipped))
