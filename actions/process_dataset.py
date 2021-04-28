@@ -47,6 +47,7 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
                 parent = root_path[-1]
                 possible_children = parent_id_to_children_ids(parent, index2word)
                 weights = [1.0 if i in possible_children else Configuration.loss_alpha for i in range(Configuration.vocabulary_size)]
+                weights[target] = Configuration.loss_alpha
 
                 composed.append(leaf_paths + [root_path])
                 target_indices.append(index_among_brothers)

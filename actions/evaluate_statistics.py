@@ -29,6 +29,8 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
     gram_acc_1 = []
     gram_acc_5 = []
 
+    grammar_first = []
+
     batch_size = Configuration.test_batch_size
     for begin in range(evaluate_begin, evaluate_end, batch_size):
         if begin % 100 == 0:
@@ -48,6 +50,10 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
 
             _, predicted = tf.nn.top_k(tf.gather(res, children_ids), k=min(5, len(children_ids)))
             gram_acc_5.append(list(map(lambda pred: children_ids[pred], predicted.numpy())))
+
+            _, top_k_indices = tf.nn.top_k(result, len(children_ids))
+            intersection = set(top_k_indices) & set(children_ids)
+            grammar_first.append(len(intersection) / len(children_ids))
 
         _, top_5_indices = tf.nn.top_k(result, 5)
         actual_top_5.extend(top_5_indices)
@@ -85,6 +91,8 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
             ok += 1
 
     print('test naive_grammar_accuracy@<=5: %f' % (ok / (evaluate_end - evaluate_begin)))
+
+    print('test grammar_first: %f' % (sum(grammar_first) / (evaluate_end - evaluate_begin)))
 
     real_stat = {}
     for target in processed_dataset.targets[evaluate_begin:evaluate_end]:

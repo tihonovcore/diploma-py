@@ -50,6 +50,7 @@ def train_model(processed_dataset: ProcessedDataset, slm=SLM(batch_size=20)):
 
             if ((batch_number + 1) * batch_size) % (dataset_size / 10) == 0:
                 percent = ((batch_number + 1) * batch_size) / (dataset_size / 100)
-                print("%d%% METRIC = %.4f" % (percent, metric.result()))
+                print("%d%% METRIC        = %.4f" % (percent, metric.result()))
+                print("%d%% LAST AVG LOSS = %.4f" % (percent, tf.reduce_sum(ls) / batch_size))
 
     return slm
