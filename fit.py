@@ -4,7 +4,7 @@ from actions.evaluate_statistics import evaluate_statistics
 from configuration import Configuration
 
 if __name__ == '__main__':
-    processed_dataset = process_dataset()
+    processed_dataset = process_dataset(shuffle_dataset=True)
     slm = train_model(processed_dataset)
     evaluate_statistics(
         Configuration.test_dataset_begin,

@@ -15,7 +15,7 @@ class ProcessedDataset:
         self.string2integer = string2integer
 
 
-def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
+def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuffle_dataset=False):
     with open(Configuration.integer2string_json, 'r') as file:
         index2word = json.load(file)
         for (k, v) in list(index2word.items()):
@@ -61,7 +61,7 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json):
     assert len(loss_weights) == dataset_size
 
     zipped = list(zip(composed, target_indices, targets, loss_weights))
-    shuffle(zipped)
+    if shuffle_dataset: shuffle(zipped)
     composed, target_indices, targets, loss_weights = list(zip(*zipped))
 
     return ProcessedDataset(composed, target_indices, targets, loss_weights, index2word, word2index)
