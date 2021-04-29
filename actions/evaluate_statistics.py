@@ -51,8 +51,8 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
             _, predicted = tf.nn.top_k(tf.gather(res, children_ids), k=min(5, len(children_ids)))
             gram_acc_5.append(list(map(lambda pred: children_ids[pred], predicted.numpy())))
 
-            _, top_k_indices = tf.nn.top_k(result, len(children_ids))
-            intersection = set(top_k_indices) & set(children_ids)
+            _, top_k_indices = tf.nn.top_k(res, len(children_ids))
+            intersection = set(top_k_indices.numpy()) & set(children_ids)
             grammar_first.append(len(intersection) / len(children_ids))
 
         _, top_5_indices = tf.nn.top_k(result, 5)
