@@ -30,6 +30,10 @@ class TE(keras.Model):
             initial_value=initializer(shape=(type_embedding_dim, ), dtype="float32"),
             trainable=True,
         )
+        self.function_from_params_and_return = tf.Variable(
+            initial_value=initializer(shape=(2 * type_embedding_dim, type_embedding_dim), dtype="float32"),
+            trainable=True,
+        )
 
     def call(self, inputs, **kwargs):
         class_embeddings = [None for _ in range(len(inputs["classes"]))]
@@ -37,7 +41,11 @@ class TE(keras.Model):
         for klass in inputs["classes"]:
             self.walk(klass["id"], inputs, class_embeddings)
 
-        return tf.convert_to_tensor(class_embeddings)
+        function_embeddings = []
+        for function_description in inputs["functions"]:
+            function_embeddings.append(self.get_embedding_for_function(function_description, class_embeddings))
+
+        return tf.convert_to_tensor(class_embeddings), tf.convert_to_tensor(function_embeddings)
 
     def walk(self, current_id, inputs, class_embeddings):
         if class_embeddings[current_id] is not None:
@@ -52,15 +60,16 @@ class TE(keras.Model):
         for dependency_id in description["dependencies"]:
             self.walk(dependency_id, inputs, class_embeddings)
 
-        property_embeddings = [self.empty_members_list]
+        member_embeddings = [self.empty_members_list]
         for property_id in description["properties"]:
-            property_embeddings.append(class_embeddings[property_id])
-        property_embeddings = tf.convert_to_tensor(property_embeddings)
-        property_embeddings = tf.reshape(property_embeddings, [1] + property_embeddings.shape)
+            member_embeddings.append(class_embeddings[property_id])
+        for function_description in description["functions"]:
+            member_embeddings.append(self.get_embedding_for_function(function_description, class_embeddings))
 
-        # todo: embed functions
+        member_embeddings = tf.convert_to_tensor(member_embeddings)
+        member_embeddings = tf.reshape(member_embeddings, [1] + member_embeddings.shape)
 
-        embedding_for_this_class = self.embed_members(property_embeddings)
+        embedding_for_this_class = self.embed_members(member_embeddings)
         embedding_for_this_class = tf.reshape(embedding_for_this_class, [Configuration.type_embedding_dim])
 
         super_types_embeddings = []
@@ -81,3 +90,23 @@ class TE(keras.Model):
                  "kotlin.CharSequence", "kotlin.Boolean", "kotlin.Unit"].index(name)
 
         return self.basic(tf.constant(index))
+
+    def get_embedding_for_function(self, description, class_embeddings):
+        parameter_embeddings = [self.empty_parameters_list]
+        for parameter_id in description["parameters"]:
+            parameter_embeddings.append(class_embeddings[parameter_id])
+
+        parameter_embeddings = tf.convert_to_tensor(parameter_embeddings)
+        parameter_embeddings = tf.reshape(parameter_embeddings, [1] + parameter_embeddings.shape)
+
+        embedding_for_parameter_list = self.embed_function_parameters(parameter_embeddings)
+        embedding_for_parameter_list = tf.reshape(embedding_for_parameter_list, [Configuration.type_embedding_dim])
+
+        return_type_id = description["returnType"]
+        embedding_for_return_type = class_embeddings[return_type_id]
+
+        result = tf.concat([embedding_for_parameter_list, embedding_for_return_type], axis=0)
+        result = tf.reshape(result, [1, 2 * Configuration.type_embedding_dim])
+        result = tf.matmul(result, self.function_from_params_and_return)
+        result = tf.reshape(result, [Configuration.type_embedding_dim])
+        return result
