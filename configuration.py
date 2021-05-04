@@ -34,3 +34,6 @@ class Configuration:
     loss_alpha = 2.0
 
     epochs_count = 2
+
+    basic_types_count = 11
+    type_embedding_dim = 128
