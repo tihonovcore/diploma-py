@@ -36,18 +36,27 @@ class TE(keras.Model):
         )
 
     def call(self, inputs, **kwargs):
+        member_function_embeddings = [[] for _ in range(len(inputs["classes"]))]
         class_embeddings = [None for _ in range(len(inputs["classes"]))]
 
         for klass in inputs["classes"]:
-            self.walk(klass["id"], inputs, class_embeddings)
+            self.walk(klass["id"], inputs, class_embeddings, member_function_embeddings)
+
+        for klass in inputs["classes"]:
+            index = klass["id"]
+
+            if klass["isBasic"]:
+                for function_description in klass["functions"]:
+                    function_embedding = self.get_embedding_for_function(function_description, class_embeddings)
+                    member_function_embeddings[index].append(function_embedding)
 
         function_embeddings = []
         for function_description in inputs["functions"]:
             function_embeddings.append(self.get_embedding_for_function(function_description, class_embeddings))
 
-        return tf.convert_to_tensor(class_embeddings), tf.convert_to_tensor(function_embeddings)
+        return tf.convert_to_tensor(class_embeddings), tf.convert_to_tensor(function_embeddings), member_function_embeddings
 
-    def walk(self, current_id, inputs, class_embeddings):
+    def walk(self, current_id, inputs, class_embeddings, member_function_embeddings):
         if class_embeddings[current_id] is not None:
             return
 
@@ -58,13 +67,15 @@ class TE(keras.Model):
             return
 
         for dependency_id in description["dependencies"]:
-            self.walk(dependency_id, inputs, class_embeddings)
+            self.walk(dependency_id, inputs, class_embeddings, member_function_embeddings)
 
         member_embeddings = [self.empty_members_list]
         for property_id in description["properties"]:
             member_embeddings.append(class_embeddings[property_id])
         for function_description in description["functions"]:
-            member_embeddings.append(self.get_embedding_for_function(function_description, class_embeddings))
+            function_embedding = self.get_embedding_for_function(function_description, class_embeddings)
+            member_embeddings.append(function_embedding)
+            member_function_embeddings[current_id].append(function_embedding)
 
         member_embeddings = tf.convert_to_tensor(member_embeddings)
         member_embeddings = tf.reshape(member_embeddings, [1] + member_embeddings.shape)
