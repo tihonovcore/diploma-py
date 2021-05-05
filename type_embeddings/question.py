@@ -33,7 +33,8 @@ class Question(keras.Model):
 
         class_id_count = len(inputs["classes"])
 
-        result = []
+        all_actual = []
+        all_real = []
 
         # A is subtype B
         for _ in range(self.actions_per_question):
@@ -47,7 +48,9 @@ class Question(keras.Model):
 
             actual = self.subtype([class_embeddings[derived_id], class_embeddings[true_base_id]])
             real = 1.0
-            result.append((actual, real))
+
+            all_actual.append(actual)
+            all_real.append(real)
 
         # A is NOT subtype B
         for _ in range(self.actions_per_question):
@@ -62,7 +65,9 @@ class Question(keras.Model):
 
             actual = self.subtype([class_embeddings[derived_id], class_embeddings[wrong_base_id]])
             real = 0.0
-            result.append((actual, real))
+
+            all_actual.append(actual)
+            all_real.append(real)
 
         # todo: A contains as members set X
         # todo: A NOT contains as members set X
@@ -71,7 +76,7 @@ class Question(keras.Model):
         # todo: A(X) is B
         # todo: A(X) is NOT B
 
-        return result
+        return all_actual, all_real
 
 
 class KInputsNN(keras.Model):
