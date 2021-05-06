@@ -1,23 +1,8 @@
-import json
-
 import tensorflow as tf
 
+from actions.find_possible_children import parent_id_to_children_ids
 from configuration import Configuration
 from numpy import argmax
-
-
-def parent_id_to_children_ids(parent_id, integer2string):
-    with open(Configuration.parent_child_json, 'r') as file:
-        parent2child = json.loads(file.read())
-
-    string2integer = {}
-    for (i, s) in integer2string.items():
-        string2integer[s] = i
-
-    parent_string = integer2string[parent_id]
-    children_strings = parent2child[parent_string]
-
-    return list(map(lambda child: string2integer[child], children_strings))
 
 
 def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
@@ -37,13 +22,15 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
             print('begin: %d' % begin)
 
         composed_batch = tf.ragged.constant(processed_dataset.composed[begin:begin + batch_size])
+        left_brothers_batch = tf.ragged.constant(processed_dataset.left_brothers[begin:begin + batch_size])
         indices_batch = tf.constant(processed_dataset.target_indices[begin:begin + batch_size])
 
         result = slm.call((composed_batch, indices_batch))
 
-        for (res, cmp) in zip(result, composed_batch):
-            parent_id = cmp[-1][-1].numpy()
-            children_ids = parent_id_to_children_ids(parent_id, processed_dataset.integer2string)
+        empty_children_ids_count = 0
+        for (res, cmp, left_brothers) in zip(result, composed_batch, left_brothers_batch):
+            parent_id = cmp[-1][-1]
+            children_ids = parent_id_to_children_ids(parent_id, left_brothers)
 
             _, predicted = tf.nn.top_k(tf.gather(res, children_ids), k=1)
             gram_acc_1.append(children_ids[predicted.numpy()[0]])
@@ -53,7 +40,11 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
 
             _, top_k_indices = tf.nn.top_k(res, len(children_ids))
             intersection = set(top_k_indices.numpy()) & set(children_ids)
-            grammar_first.append(len(intersection) / len(children_ids))
+
+            if len(children_ids) != 0:
+                grammar_first.append(len(intersection) / len(children_ids))
+            else:
+                empty_children_ids_count += 1
 
         _, top_5_indices = tf.nn.top_k(result, 5)
         actual_top_5.extend(top_5_indices)
@@ -93,6 +84,7 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
     print('test naive_grammar_accuracy@<=5: %f' % (ok / (evaluate_end - evaluate_begin)))
 
     print('test grammar_first: %f' % (sum(grammar_first) / (evaluate_end - evaluate_begin)))
+    print('!!! empty_children_ids_count: %d' % empty_children_ids_count)
 
     real_stat = {}
     for target in processed_dataset.targets[evaluate_begin:evaluate_end]:

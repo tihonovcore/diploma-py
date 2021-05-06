@@ -6,6 +6,9 @@ from os.path import join
 class Configuration:
     root_path = pathlib.Path(__file__).parent.absolute()
 
+    integer2string = None
+    string2integer = None
+
     parent_child_json = join(root_path, 'dataset', 'parentChild.json')
     integer2string_json = join(root_path, 'dataset', 'integer2string.json')
     string2integer_json = join(root_path, 'dataset', 'string2integer.json')
@@ -15,10 +18,10 @@ class Configuration:
 
     print_shape = False
 
-    train_dataset_size = 7000
-    test_dataset_size = 810
-    test_dataset_begin = 7000
-    test_dataset_end = 7810
+    train_dataset_size = 6000
+    test_dataset_size = 434
+    test_dataset_begin = 6000
+    test_dataset_end = 6434
 
     train_batch_size = 10
     test_batch_size = 10
