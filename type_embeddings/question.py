@@ -39,7 +39,7 @@ class Question(keras.Model):
         while True:
             question_id = random.choices([i for i in range(self.question_count)], )[0]
 
-            # A is subtype B
+            # (A, B): A is subtype B
             if question_id == 0:
                 derived_id = random.randrange(class_id_count)
 
@@ -58,7 +58,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A is NOT subtype B
+            # (A, B): A is NOT subtype B
             if question_id == 1:
                 derived_id = random.randrange(class_id_count)
 
@@ -78,7 +78,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A is NOT subtype B, because A is function
+            # (A, B): A is NOT subtype B, because A is function
             if question_id == 2:
                 if class_id_count == 0 or function_id_count == 0:
                     continue
@@ -95,7 +95,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A is NOT subtype B, because B is function
+            # (A, B): A is NOT subtype B, because B is function
             if question_id == 3:
                 if class_id_count == 0 or function_id_count == 0:
                     continue
@@ -112,7 +112,7 @@ class Question(keras.Model):
                 
                 return actual, real
 
-            # A is NOT subtype B, because A and B are functions
+            # (A, B): A is NOT subtype B, because A and B are functions
             if question_id == 4:
                 if function_id_count <= 1:
                     continue
@@ -132,7 +132,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A contains property X as member
+            # (A, X): A contains property with type X as member
             if question_id == 5:
                 class_a = random.randrange(class_id_count)
 
@@ -151,7 +151,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A contains subtype of property type X as member
+            # (A, X): A contains property with type Y as member, Y is subtype of X
             if question_id == 6:
                 class_a = random.randrange(class_id_count)
 
@@ -178,7 +178,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A NOT contains property X as member
+            # (A, X): A NOT contains property with type X as member
             if question_id == 7:
                 class_a = random.randrange(class_id_count)
 
@@ -202,7 +202,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A contains function B
+            # (A, B): A contains function with type B
             if question_id == 8:
                 class_a = random.randrange(class_id_count)
 
@@ -224,7 +224,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A NOT contains function
+            # (A, B): A NOT contains function with type B
             if question_id == 9:
                 class_a = random.randrange(class_id_count)
 
@@ -256,7 +256,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A contains parameter X
+            # (A, X): A contains parameter with type X
             if question_id == 10:
                 function_a = random.randrange(function_id_count)
 
@@ -275,7 +275,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A contains subtype of parameter type X
+            # (A, X): A contains parameter with type Y, Y is subtype of X
             if question_id == 11:
                 function_a = random.randrange(function_id_count)
 
@@ -302,7 +302,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A NOT contains parameter type X
+            # (A, X): A NOT contains parameter with type X
             if question_id == 12:
                 function_a = random.randrange(function_id_count)
 
@@ -326,7 +326,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A return B
+            # (A, B): A return B
             if question_id == 13:
                 function_a = random.randrange(function_id_count)
 
@@ -341,7 +341,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A return subtype of B type
+            # (A, B): A return C, C is subtype of B
             if question_id == 14:
                 function_a = random.randrange(function_id_count)
 
@@ -361,7 +361,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # A NOT return B
+            # (A, B): A NOT return B
             if question_id == 15:
                 function_a = random.randrange(function_id_count)
 
