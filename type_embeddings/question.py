@@ -11,13 +11,12 @@ from type_embeddings.implementation import TE
 class Question(keras.Model):
     def __init__(
             self,
-            actions_per_question=10,
             type_embedding_dim=Configuration.type_embedding_dim,
             **kwargs
     ):
         super(Question, self).__init__(name='question_model', **kwargs)
 
-        self.actions_per_question = actions_per_question
+        self.question_count = 2
 
         self.type_embeddings = TE()
 
@@ -36,8 +35,10 @@ class Question(keras.Model):
         all_actual = []
         all_real = []
 
+        question_id = random.randrange(self.question_count)
+
         # A is subtype B
-        for _ in range(self.actions_per_question):
+        while question_id == 0:
             derived_id = random.randrange(class_id_count)
 
             possible_super_types = inputs["classes"][derived_id]["superTypes"]
@@ -51,9 +52,10 @@ class Question(keras.Model):
 
             all_actual.append(actual)
             all_real.append(real)
+            break
 
         # A is NOT subtype B
-        for _ in range(self.actions_per_question):
+        while question_id == 1:
             derived_id = random.randrange(class_id_count)
 
             possible_super_types = inputs["classes"][derived_id]["superTypes"]
@@ -68,6 +70,7 @@ class Question(keras.Model):
 
             all_actual.append(actual)
             all_real.append(real)
+            break
 
         # todo: A contains as members set X
         # todo: A NOT contains as members set X

@@ -18,7 +18,7 @@ if __name__ == '__main__':
         for name in filenames:
             file_names.append(join(dirpath, name))
 
-    model = Question(actions_per_question=50)
+    model = Question()
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
     loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
