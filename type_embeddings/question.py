@@ -1,6 +1,4 @@
-import operator
 import random
-from functools import reduce
 
 import tensorflow
 from tensorflow import keras
@@ -29,6 +27,7 @@ class Question(keras.Model):
         self.has_as_parameter = KInputsNN(k=2, action='parameter')
         self.returns = KInputsNN(k=2, action='return')
 
+        self.ok = [0 for _ in range(self.question_count)]
         self.cnt = [0 for _ in range(self.question_count)]
 
     def call(self, inputs, **kwargs):
@@ -54,7 +53,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A is NOT subtype B
             if question_id == 1:
@@ -71,7 +73,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A is NOT subtype B, because A is function
             if question_id == 2:
@@ -85,7 +90,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A is NOT subtype B, because B is function
             if question_id == 3:
@@ -99,7 +107,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+                
+                return actual, real
 
             # A is NOT subtype B, because A and B are functions
             if question_id == 4:
@@ -116,7 +127,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A contains property X as member
             if question_id == 5:
@@ -132,7 +146,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A contains subtype of property type X as member
             if question_id == 6:
@@ -156,7 +173,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A NOT contains property X as member
             if question_id == 7:
@@ -177,7 +197,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A contains function B
             if question_id == 8:
@@ -196,7 +219,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A NOT contains function
             if question_id == 9:
@@ -225,7 +251,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A contains parameter X
             if question_id == 10:
@@ -241,7 +270,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A contains subtype of parameter type X
             if question_id == 11:
@@ -265,7 +297,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A NOT contains parameter type X
             if question_id == 12:
@@ -286,7 +321,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A return B
             if question_id == 13:
@@ -298,7 +336,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A return subtype of B type
             if question_id == 14:
@@ -315,7 +356,10 @@ class Question(keras.Model):
                 real = 1.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
             # A NOT return B
             if question_id == 15:
@@ -334,7 +378,10 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                return [actual], [real]
+                if tensorflow.abs(actual - real) < 0.5: 
+                    self.ok[question_id] += 1
+
+                return actual, real
 
     def subtypes_of(self, class_id, inputs):
         subtypes = []

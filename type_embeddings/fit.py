@@ -40,12 +40,8 @@ if __name__ == '__main__':
             with tf.GradientTape() as tape:
                 actual, real = model(inputs)
 
-                metric.update_state(y_true=real, y_pred=actual)
-
-                avg_ls = 0
-                for (a, r) in zip(actual, real):
-                    ls = loss(y_true=tf.constant(r, shape=(1, 1)), y_pred=a)
-                    avg_ls += ls
+                metric.update_state(y_true=[real], y_pred=[actual])
+                ls = loss(y_true=tf.constant(real, shape=(1, 1)), y_pred=actual)
 
             grads = tape.gradient(ls, model.trainable_weights)
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
