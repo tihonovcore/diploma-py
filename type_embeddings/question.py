@@ -1,4 +1,6 @@
+import operator
 import random
+from functools import reduce
 
 import tensorflow
 from tensorflow import keras
@@ -16,15 +18,16 @@ class Question(keras.Model):
     ):
         super(Question, self).__init__(name='question_model', **kwargs)
 
-        self.question_count = 5
+        self.question_count = 16
 
         self.type_embeddings = TE()
 
-        self.compose = layers.LSTM(type_embedding_dim)
+        self.compose = layers.LSTM(type_embedding_dim, name='compose')
 
-        self.subtype = KInputsNN(k=2)
-        self.has_as_members = KInputsNN(k=2)
-        self.returns = KInputsNN(k=3)
+        self.subtype = KInputsNN(k=2, action='subtype')
+        self.has_as_member = KInputsNN(k=2, action='member')
+        self.has_as_parameter = KInputsNN(k=2, action='parameter')
+        self.returns = KInputsNN(k=2, action='return')
 
         self.cnt = [0 for _ in range(self.question_count)]
 
@@ -35,7 +38,7 @@ class Question(keras.Model):
         function_id_count = len(inputs["functions"])
 
         while True:
-            question_id = random.choices([i for i in range(self.question_count)], weights=[4, 1, 1, 1, 1])[0]
+            question_id = random.choices([i for i in range(self.question_count)], )[0]
 
             # A is subtype B
             if question_id == 0:
@@ -115,21 +118,269 @@ class Question(keras.Model):
                 self.cnt[question_id] += 1
                 return [actual], [real]
 
-    def subtypes_of(self, x, inputs):
-        pass
+            # A contains property X as member
+            if question_id == 5:
+                class_a = random.randrange(class_id_count)
 
-    def super_properties(self, x, inputs):
-        pass
+                all_properties = self.get_all_properties(class_a, inputs)
+                if len(all_properties) == 0:
+                    continue
+
+                property_id = random.choice(all_properties)
+
+                actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A contains subtype of property type X as member
+            if question_id == 6:
+                class_a = random.randrange(class_id_count)
+
+                all_properties = self.get_all_properties(class_a, inputs)
+                if len(all_properties) == 0:
+                    continue
+
+                all_subtypes = []
+                for p in all_properties:
+                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                unused_subtypes = list(filter(lambda p: p not in all_properties, all_subtypes))
+
+                if len(unused_subtypes) == 0:
+                    continue
+
+                property_id = random.choice(unused_subtypes)
+
+                actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A NOT contains property X as member
+            if question_id == 7:
+                class_a = random.randrange(class_id_count)
+
+                all_properties = self.get_all_properties(class_a, inputs)
+                all_subtypes = []
+                for p in all_properties:
+                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                unused_types = list(filter(lambda p: p not in all_properties and p not in all_subtypes, [i for i in range(class_id_count)]))
+
+                if len(unused_types) == 0:
+                    continue
+
+                property_id = random.choice(unused_types)
+
+                actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
+                real = 0.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A contains function B
+            if question_id == 8:
+                class_a = random.randrange(class_id_count)
+
+                all_functions = member_function_embeddings[class_a]
+                for supertype in inputs["classes"][class_a]["superTypes"]:
+                    all_functions.extend(member_function_embeddings[supertype])
+
+                if len(all_functions) == 0:
+                    continue
+
+                function_embedding = random.choice(all_functions)
+
+                actual = self.has_as_member([class_embeddings[class_a], function_embedding])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A NOT contains function
+            if question_id == 9:
+                class_a = random.randrange(class_id_count)
+
+                current_functions = inputs["classes"][class_a]["functions"]
+                for supertype in inputs["classes"][class_a]["superTypes"]:
+                    current_functions.extend(inputs["classes"][supertype]["functions"])
+
+                chosen_other_function_id = None
+                for index, other_description in enumerate(inputs["functions"]):
+                    chosen = False
+                    for current_description in current_functions:
+                        if self.functions_are_similar(other_description, current_description):
+                            break
+                    if chosen:
+                        chosen_other_function_id = index
+                        break
+
+                if chosen_other_function_id is None:
+                    continue
+
+                function_embedding = inputs["functions"][chosen_other_function_id]
+
+                actual = self.has_as_member([class_embeddings[class_a], function_embedding])
+                real = 0.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A contains parameter X
+            if question_id == 10:
+                function_a = random.randrange(function_id_count)
+
+                all_parameters = inputs["functions"][function_a]["parameters"]
+                if len(all_parameters) == 0:
+                    continue
+
+                parameter_id = random.choice(all_parameters)
+
+                actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A contains subtype of parameter type X
+            if question_id == 11:
+                function_a = random.randrange(function_id_count)
+
+                all_parameters = inputs["functions"][function_a]["parameters"]
+                if len(all_parameters) == 0:
+                    continue
+
+                all_subtypes = []
+                for p in all_parameters:
+                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                unused_subtypes = list(filter(lambda p: p not in all_parameters, all_subtypes))
+
+                if len(unused_subtypes) == 0:
+                    continue
+
+                parameter_id = random.choice(unused_subtypes)
+
+                actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A NOT contains parameter type X
+            if question_id == 12:
+                function_a = random.randrange(function_id_count)
+
+                all_parameters = inputs["functions"][function_a]["parameters"]
+                all_subtypes = []
+                for p in all_parameters:
+                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                unused_types = list(filter(lambda p: p not in all_parameters and p not in all_subtypes, [i for i in range(class_id_count)]))
+
+                if len(unused_types) == 0:
+                    continue
+
+                parameter_id = random.choice(unused_types)
+
+                actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
+                real = 0.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A return B
+            if question_id == 13:
+                function_a = random.randrange(function_id_count)
+
+                return_type = inputs["functions"][function_a]["returnType"]
+
+                actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A return subtype of B type
+            if question_id == 14:
+                function_a = random.randrange(function_id_count)
+
+                return_type = inputs["functions"][function_a]["returnType"]
+                all_subtypes = self.subtypes_of(return_type, inputs)
+                if len(all_subtypes) == 0:
+                    continue
+
+                return_type = random.choice(all_subtypes)
+
+                actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
+                real = 1.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+            # A NOT return B
+            if question_id == 15:
+                function_a = random.randrange(function_id_count)
+
+                return_type = inputs["functions"][function_a]["returnType"]
+                all_subtypes = self.subtypes_of(return_type, inputs)
+                unused_types = list(filter(lambda p: p != return_type and p not in all_subtypes, [i for i in range(class_id_count)]))
+
+                if len(unused_types) == 0:
+                    continue
+
+                return_type = random.choice(unused_types)
+
+                actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
+                real = 0.0
+
+                self.cnt[question_id] += 1
+                return [actual], [real]
+
+    def subtypes_of(self, class_id, inputs):
+        subtypes = []
+        for klass_id, klass in enumerate(inputs["classes"]):
+            if class_id in klass["superTypes"]:
+                subtypes.append(klass_id)
+        return subtypes
+
+    def get_all_properties(self, class_id, inputs):
+        result = []
+
+        def walk_through_supertypes(current):
+            result.extend(current["properties"])
+            for supertype in current["superTypes"]:
+                walk_through_supertypes(inputs["classes"][supertype])
+
+        walk_through_supertypes(inputs["classes"][class_id])
+        return result
+
+    def randomly_change_to_subtype(self, property_ids, inputs):
+        for i in range(len(property_ids)):
+            if random.random() < 0.1:
+                property_ids[i] = random.choice(self.subtypes_of(property_ids[i], inputs))
+        return property_ids
+
+    def functions_are_similar(self, a, b):
+        if a["returnType"] != b["returnType"]:
+            return False
+
+        a_params = a["parameters"]
+        b_params = b["parameters"]
+        if len(a_params) != len(b_params):
+            return False
+
+        return sorted(a_params) == sorted(b_params)
 
 
 class KInputsNN(keras.Model):
     def __init__(
             self,
+            action,
             k=1,
             type_embedding_dim=Configuration.type_embedding_dim,
             **kwargs
     ):
-        super(KInputsNN, self).__init__(name='two_inputs_neural_network', **kwargs)
+        super(KInputsNN, self).__init__(name='two_inputs_neural_network action:' + action, **kwargs)
 
         self.k = k
 
