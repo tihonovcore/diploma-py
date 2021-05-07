@@ -4,14 +4,9 @@ from os.path import join
 
 import tensorflow as tf
 
+from configuration import Configuration
 from type_embeddings.question import Question
 
-# todo:
-#  Model has a problem:
-#  let there are three nodes: a, b, c
-#  and three orientated edges: (a, b) (a, c) (b, c)
-#  on backward step node `c` gets loss twice.
-#  For this reason loss function grow while learning.
 if __name__ == '__main__':
     file_names = []
     for (dirpath, dirnames, filenames) in walk('/home/tihonovcore/diploma/kotlin/compiler/tests-common-new/tests/org/jetbrains/kotlin/test/backend/handlers/dataset'):
@@ -24,15 +19,11 @@ if __name__ == '__main__':
     loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
     metric = tf.keras.metrics.BinaryAccuracy('accuracy')
 
-    # step = 1
-    #
-    # def my_loss(y_true, y_pred):
-    #     return - (y_true * tf.math.log(y_pred) + (1 - y_true) * tf.math.log(1 - y_pred)) / step / step
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-    for epoch in range(5):
+    for epoch in range(Configuration.type_embedding_model_epochs_count):
         print('start epoch %d' % epoch)
         for file_number, name in enumerate(file_names):
-            # step += 1
 
             with open(name, 'r') as file:
                 inputs = json.load(file)
@@ -46,7 +37,8 @@ if __name__ == '__main__':
             grads = tape.gradient(ls, model.trainable_weights)
             optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
-            # if (file_number + 1) % (len(file_names) / 10) == 0:
             percent = (file_number + 1) / (len(file_names) / 100)
             print("%.4f%% metric    = %.4f" % (percent, metric.result()))
-            print("%.4f%% avg  ls   = %.4f" % (percent, avg_ls / len(actual)))
+
+        print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
+        print(model.cnt)

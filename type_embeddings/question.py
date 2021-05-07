@@ -134,7 +134,15 @@ class Question(keras.Model):
 
             # (A, X): A contains property with type X as member
             if question_id == 5:
-                class_a = random.randrange(class_id_count)
+                classes_with_properties = []
+                for class_id in range(class_id_count):
+                    if len(self.get_all_properties(class_id, inputs)) != 0:
+                        classes_with_properties.append(class_id)
+
+                if len(classes_with_properties) == 0:
+                    continue
+
+                class_a = random.choice(classes_with_properties)
 
                 all_properties = self.get_all_properties(class_a, inputs)
                 if len(all_properties) == 0:
@@ -153,23 +161,34 @@ class Question(keras.Model):
 
             # (A, X): A contains property with type Y as member, Y is subtype of X
             if question_id == 6:
-                class_a = random.randrange(class_id_count)
+                classes_with_properties = []
+                for class_id in range(class_id_count):
+                    if len(self.get_all_properties(class_id, inputs)) != 0:
+                        classes_with_properties.append(class_id)
 
-                all_properties = self.get_all_properties(class_a, inputs)
-                if len(all_properties) == 0:
+                if len(classes_with_properties) == 0:
                     continue
 
-                all_subtypes = []
-                for p in all_properties:
-                    all_subtypes.extend(self.subtypes_of(p, inputs))
-                unused_subtypes = list(filter(lambda p: p not in all_properties, all_subtypes))
+                random.shuffle(classes_with_properties)
 
-                if len(unused_subtypes) == 0:
+                chosen_class_id = None
+                chosen_property_id = None
+                for class_id in classes_with_properties:
+                    all_properties = self.get_all_properties(class_id, inputs)
+
+                    all_subtypes = []
+                    for p in all_properties:
+                        all_subtypes.extend(self.subtypes_of(p, inputs))
+                    unused_subtypes = list(filter(lambda p: p not in all_properties, all_subtypes))
+
+                    if len(unused_subtypes) != 0:
+                        chosen_class_id = class_id
+                        chosen_property_id = random.choice(unused_subtypes)
+
+                if chosen_class_id is None:
                     continue
 
-                property_id = random.choice(unused_subtypes)
-
-                actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
+                actual = self.has_as_member([class_embeddings[chosen_class_id], class_embeddings[chosen_property_id]])
                 real = 1.0
 
                 self.cnt[question_id] += 1
@@ -234,9 +253,10 @@ class Question(keras.Model):
 
                 chosen_other_function_id = None
                 for index, other_description in enumerate(inputs["functions"]):
-                    chosen = False
+                    chosen = True
                     for current_description in current_functions:
                         if self.functions_are_similar(other_description, current_description):
+                            chosen = False
                             break
                     if chosen:
                         chosen_other_function_id = index
@@ -245,9 +265,7 @@ class Question(keras.Model):
                 if chosen_other_function_id is None:
                     continue
 
-                function_embedding = inputs["functions"][chosen_other_function_id]
-
-                actual = self.has_as_member([class_embeddings[class_a], function_embedding])
+                actual = self.has_as_member([class_embeddings[class_a], function_embeddings[chosen_other_function_id]])
                 real = 0.0
 
                 self.cnt[question_id] += 1
@@ -258,12 +276,16 @@ class Question(keras.Model):
 
             # (A, X): A contains parameter with type X
             if question_id == 10:
-                function_a = random.randrange(function_id_count)
+                functions_with_parameters = []
+                for function_id in range(function_id_count):
+                    if len(inputs["functions"][function_id]["parameters"]) != 0:
+                        functions_with_parameters.append(function_id)
 
-                all_parameters = inputs["functions"][function_a]["parameters"]
-                if len(all_parameters) == 0:
+                if len(functions_with_parameters) == 0:
                     continue
 
+                function_a = random.choice(functions_with_parameters)
+                all_parameters = inputs["functions"][function_a]["parameters"]
                 parameter_id = random.choice(all_parameters)
 
                 actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
@@ -277,23 +299,32 @@ class Question(keras.Model):
 
             # (A, X): A contains parameter with type Y, Y is subtype of X
             if question_id == 11:
-                function_a = random.randrange(function_id_count)
+                functions_with_parameters = []
+                for function_id in range(function_id_count):
+                    if len(inputs["functions"][function_id]["parameters"]) != 0:
+                        functions_with_parameters.append(function_id)
 
-                all_parameters = inputs["functions"][function_a]["parameters"]
-                if len(all_parameters) == 0:
+                if len(functions_with_parameters) == 0:
                     continue
 
-                all_subtypes = []
-                for p in all_parameters:
-                    all_subtypes.extend(self.subtypes_of(p, inputs))
-                unused_subtypes = list(filter(lambda p: p not in all_parameters, all_subtypes))
+                chosen_function_id = None
+                chosen_parameter_id = None
+                for function_id in functions_with_parameters:
+                    all_parameters = inputs["functions"][function_id]["parameters"]
 
-                if len(unused_subtypes) == 0:
+                    all_subtypes = []
+                    for p in all_parameters:
+                        all_subtypes.extend(self.subtypes_of(p, inputs))
+                    unused_subtypes = list(filter(lambda p: p not in all_parameters, all_subtypes))
+
+                    if len(unused_subtypes) != 0:
+                        chosen_function_id = function_id
+                        chosen_parameter_id = random.choice(unused_subtypes)
+
+                if chosen_function_id is None:
                     continue
 
-                parameter_id = random.choice(unused_subtypes)
-
-                actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
+                actual = self.has_as_parameter([function_embeddings[chosen_function_id], class_embeddings[chosen_parameter_id]])
                 real = 1.0
 
                 self.cnt[question_id] += 1
@@ -343,13 +374,19 @@ class Question(keras.Model):
 
             # (A, B): A return C, C is subtype of B
             if question_id == 14:
-                function_a = random.randrange(function_id_count)
+                functions_where_return_has_subtypes = []
+                for function_id in range(function_id_count):
+                    return_type = inputs["functions"][function_id]["returnType"]
+                    if len(self.subtypes_of(return_type, inputs)) != 0:
+                        functions_where_return_has_subtypes.append(function_id)
+
+                if len(functions_where_return_has_subtypes) == 0:
+                    continue
+
+                function_a = random.choice(functions_where_return_has_subtypes)
 
                 return_type = inputs["functions"][function_a]["returnType"]
                 all_subtypes = self.subtypes_of(return_type, inputs)
-                if len(all_subtypes) == 0:
-                    continue
-
                 return_type = random.choice(all_subtypes)
 
                 actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])

@@ -38,5 +38,7 @@ class Configuration:
 
     epochs_count = 2
 
+    type_embedding_model_epochs_count = 10
+
     basic_types_count = 11
     type_embedding_dim = 128
