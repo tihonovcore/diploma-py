@@ -10,7 +10,7 @@ from type_embeddings.question_model import QuestionModel
 
 if __name__ == '__main__':
     file_names = []
-    for (dirpath, dirnames, filenames) in walk('/home/tihonovcore/diploma/kotlin/compiler/tests-common-new/tests/org/jetbrains/kotlin/test/backend/handlers/dataset'):
+    for (dirpath, dirnames, filenames) in walk(Configuration.types_dataset):
         for name in filenames:
             file_names.append(join(dirpath, name))
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         with open(name, 'r') as file:
             inputs = json.load(file)
 
-        questions.append(generate_questions(inputs, Configuration.questions_per_file))
+        questions.append(generate_questions(inputs, Configuration.questions_per_file_train))
     print('questions have generated')
 
     for epoch in range(Configuration.type_embedding_model_epochs_count):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         with open(name, 'r') as file:
             inputs = json.load(file)
 
-        questions.append(generate_questions(inputs, 5))
+        questions.append(generate_questions(inputs, Configuration.questions_per_file_test))
     print('questions for testing have generated')
 
     model.ok = [0 for _ in range(model.question_count)]

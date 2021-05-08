@@ -48,4 +48,7 @@ class Configuration:
     type_embedding_dim = 128
 
     question_type_count = 16
-    questions_per_file = 5
+    questions_per_file_train = 5
+    questions_per_file_test = 2
+
+    types_dataset = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/types'
