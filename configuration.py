@@ -38,6 +38,10 @@ class Configuration:
 
     epochs_count = 2
 
+    # Question model configuration:
+
+    saved_type_model = join(root_path, 'type_embeddings', 'weights', 'weights')
+
     type_embedding_model_epochs_count = 10
 
     basic_types_count = 11

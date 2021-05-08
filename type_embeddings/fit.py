@@ -53,3 +53,36 @@ if __name__ == '__main__':
 
         print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
         print(model.cnt)
+
+    model.save_weights(Configuration.saved_type_model)
+
+    model = QuestionModel()
+    model.load_weights(Configuration.saved_type_model)
+
+    print('start question generation for testing')
+    questions = []
+    for file_number, name in enumerate(file_names):
+        with open(name, 'r') as file:
+            inputs = json.load(file)
+
+        questions.append(generate_questions(inputs, 5))
+    print('questions for testing have generated')
+
+    model.ok = [0 for _ in range(model.question_count)]
+    model.cnt = [0 for _ in range(model.question_count)]
+
+    test_metric = tf.keras.metrics.BinaryAccuracy('accuracy')
+    for file_number, (name, questions_for_this_file) in enumerate(zip(file_names, questions)):
+        with open(name, 'r') as file:
+            inputs = json.load(file)
+
+        for q in questions_for_this_file:
+            actual, real = model([inputs, q])
+
+            test_metric.update_state(y_true=[real], y_pred=[actual])
+
+        percent = (file_number + 1) / (len(file_names) / 100)
+        print("%.4f%% test_metric = %.4f" % (percent, test_metric.result()))
+
+    print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
+    print(model.cnt)
