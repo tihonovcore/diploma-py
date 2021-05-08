@@ -37,7 +37,7 @@ class Question(keras.Model):
         function_id_count = len(inputs["functions"])
 
         while True:
-            question_id = random.choices([i for i in range(self.question_count)], )[0]
+            question_id = random.choices([i for i in range(self.question_count)])[0]
 
             # (A, B): A is subtype B
             if question_id == 0:
@@ -143,11 +143,7 @@ class Question(keras.Model):
                     continue
 
                 class_a = random.choice(classes_with_properties)
-
                 all_properties = self.get_all_properties(class_a, inputs)
-                if len(all_properties) == 0:
-                    continue
-
                 property_id = random.choice(all_properties)
 
                 actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
@@ -159,7 +155,8 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # (A, X): A contains property with type Y as member, Y is subtype of X
+            # todo: this is question for `write`. need question for `read`?
+            # (A, X): A contains property with type Y as member, Y is supertype of X
             if question_id == 6:
                 classes_with_properties = []
                 for class_id in range(class_id_count):
@@ -216,7 +213,7 @@ class Question(keras.Model):
                 real = 0.0
 
                 self.cnt[question_id] += 1
-                if tensorflow.abs(actual - real) < 0.5: 
+                if tensorflow.abs(actual - real) < 0.5:
                     self.ok[question_id] += 1
 
                 return actual, real
@@ -297,7 +294,7 @@ class Question(keras.Model):
 
                 return actual, real
 
-            # (A, X): A contains parameter with type Y, Y is subtype of X
+            # (A, X): A contains parameter with type Y, Y is supertype of X
             if question_id == 11:
                 functions_with_parameters = []
                 for function_id in range(function_id_count):
@@ -374,20 +371,20 @@ class Question(keras.Model):
 
             # (A, B): A return C, C is subtype of B
             if question_id == 14:
-                functions_where_return_has_subtypes = []
+                functions_where_return_has_supertypes = []
                 for function_id in range(function_id_count):
                     return_type = inputs["functions"][function_id]["returnType"]
-                    if len(self.subtypes_of(return_type, inputs)) != 0:
-                        functions_where_return_has_subtypes.append(function_id)
+                    if len(inputs["classes"][function_id]["superTypes"]) != 0:
+                        functions_where_return_has_supertypes.append(function_id)
 
-                if len(functions_where_return_has_subtypes) == 0:
+                if len(functions_where_return_has_supertypes) == 0:
                     continue
 
-                function_a = random.choice(functions_where_return_has_subtypes)
+                function_a = random.choice(functions_where_return_has_supertypes)
 
                 return_type = inputs["functions"][function_a]["returnType"]
-                all_subtypes = self.subtypes_of(return_type, inputs)
-                return_type = random.choice(all_subtypes)
+                all_supertypes = inputs["classes"][function_a]["superTypes"]
+                return_type = random.choice(all_supertypes)
 
                 actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
                 real = 1.0
