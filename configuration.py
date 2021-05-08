@@ -44,3 +44,4 @@ class Configuration:
     type_embedding_dim = 128
 
     question_type_count = 16
+    questions_per_file = 5
