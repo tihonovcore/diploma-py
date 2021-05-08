@@ -6,6 +6,7 @@ from tensorflow.keras import layers
 
 from configuration import Configuration
 from type_embeddings.implementation import TE
+from type_embeddings.utils import subtypes_of, functions_are_similar, get_all_properties
 
 
 class Question(keras.Model):
@@ -16,7 +17,7 @@ class Question(keras.Model):
     ):
         super(Question, self).__init__(name='question_model', **kwargs)
 
-        self.question_count = 16
+        self.question_count = Configuration.question_type_count
 
         self.type_embeddings = TE()
 
@@ -136,14 +137,14 @@ class Question(keras.Model):
             if question_id == 5:
                 classes_with_properties = []
                 for class_id in range(class_id_count):
-                    if len(self.get_all_properties(class_id, inputs)) != 0:
+                    if len(get_all_properties(class_id, inputs)) != 0:
                         classes_with_properties.append(class_id)
 
                 if len(classes_with_properties) == 0:
                     continue
 
                 class_a = random.choice(classes_with_properties)
-                all_properties = self.get_all_properties(class_a, inputs)
+                all_properties = get_all_properties(class_a, inputs)
                 property_id = random.choice(all_properties)
 
                 actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
@@ -160,7 +161,7 @@ class Question(keras.Model):
             if question_id == 6:
                 classes_with_properties = []
                 for class_id in range(class_id_count):
-                    if len(self.get_all_properties(class_id, inputs)) != 0:
+                    if len(get_all_properties(class_id, inputs)) != 0:
                         classes_with_properties.append(class_id)
 
                 if len(classes_with_properties) == 0:
@@ -171,11 +172,11 @@ class Question(keras.Model):
                 chosen_class_id = None
                 chosen_property_id = None
                 for class_id in classes_with_properties:
-                    all_properties = self.get_all_properties(class_id, inputs)
+                    all_properties = get_all_properties(class_id, inputs)
 
                     all_subtypes = []
                     for p in all_properties:
-                        all_subtypes.extend(self.subtypes_of(p, inputs))
+                        all_subtypes.extend(subtypes_of(p, inputs))
                     unused_subtypes = list(filter(lambda p: p not in all_properties, all_subtypes))
 
                     if len(unused_subtypes) != 0:
@@ -198,10 +199,10 @@ class Question(keras.Model):
             if question_id == 7:
                 class_a = random.randrange(class_id_count)
 
-                all_properties = self.get_all_properties(class_a, inputs)
+                all_properties = get_all_properties(class_a, inputs)
                 all_subtypes = []
                 for p in all_properties:
-                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                    all_subtypes.extend(subtypes_of(p, inputs))
                 unused_types = list(filter(lambda p: p not in all_properties and p not in all_subtypes, [i for i in range(class_id_count)]))
 
                 if len(unused_types) == 0:
@@ -252,7 +253,7 @@ class Question(keras.Model):
                 for index, other_description in enumerate(inputs["functions"]):
                     chosen = True
                     for current_description in current_functions:
-                        if self.functions_are_similar(other_description, current_description):
+                        if functions_are_similar(other_description, current_description):
                             chosen = False
                             break
                     if chosen:
@@ -311,7 +312,7 @@ class Question(keras.Model):
 
                     all_subtypes = []
                     for p in all_parameters:
-                        all_subtypes.extend(self.subtypes_of(p, inputs))
+                        all_subtypes.extend(subtypes_of(p, inputs))
                     unused_subtypes = list(filter(lambda p: p not in all_parameters, all_subtypes))
 
                     if len(unused_subtypes) != 0:
@@ -337,7 +338,7 @@ class Question(keras.Model):
                 all_parameters = inputs["functions"][function_a]["parameters"]
                 all_subtypes = []
                 for p in all_parameters:
-                    all_subtypes.extend(self.subtypes_of(p, inputs))
+                    all_subtypes.extend(subtypes_of(p, inputs))
                 unused_types = list(filter(lambda p: p not in all_parameters and p not in all_subtypes, [i for i in range(class_id_count)]))
 
                 if len(unused_types) == 0:
@@ -400,7 +401,7 @@ class Question(keras.Model):
                 function_a = random.randrange(function_id_count)
 
                 return_type = inputs["functions"][function_a]["returnType"]
-                all_subtypes = self.subtypes_of(return_type, inputs)
+                all_subtypes = subtypes_of(return_type, inputs)
                 unused_types = list(filter(lambda p: p != return_type and p not in all_subtypes, [i for i in range(class_id_count)]))
 
                 if len(unused_types) == 0:
@@ -416,41 +417,6 @@ class Question(keras.Model):
                     self.ok[question_id] += 1
 
                 return actual, real
-
-    def subtypes_of(self, class_id, inputs):
-        subtypes = []
-        for klass_id, klass in enumerate(inputs["classes"]):
-            if class_id in klass["superTypes"]:
-                subtypes.append(klass_id)
-        return subtypes
-
-    def get_all_properties(self, class_id, inputs):
-        result = []
-
-        def walk_through_supertypes(current):
-            result.extend(current["properties"])
-            for supertype in current["superTypes"]:
-                walk_through_supertypes(inputs["classes"][supertype])
-
-        walk_through_supertypes(inputs["classes"][class_id])
-        return result
-
-    def randomly_change_to_subtype(self, property_ids, inputs):
-        for i in range(len(property_ids)):
-            if random.random() < 0.1:
-                property_ids[i] = random.choice(self.subtypes_of(property_ids[i], inputs))
-        return property_ids
-
-    def functions_are_similar(self, a, b):
-        if a["returnType"] != b["returnType"]:
-            return False
-
-        a_params = a["parameters"]
-        b_params = b["parameters"]
-        if len(a_params) != len(b_params):
-            return False
-
-        return sorted(a_params) == sorted(b_params)
 
 
 class KInputsNN(keras.Model):

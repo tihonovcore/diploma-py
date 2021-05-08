@@ -42,3 +42,5 @@ class Configuration:
 
     basic_types_count = 11
     type_embedding_dim = 128
+
+    question_type_count = 16
