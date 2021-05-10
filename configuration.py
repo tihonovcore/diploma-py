@@ -13,6 +13,7 @@ class Configuration:
     integer2string_json = join(root_path, 'dataset', 'integer2string.json')
     string2integer_json = join(root_path, 'dataset', 'string2integer.json')
     train_dataset_json = join(root_path, 'dataset', 'dataset.json')
+    new_train_dataset_json = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/integer'
 
     saved_model = join(root_path, 'saved_model', 'model')
 
