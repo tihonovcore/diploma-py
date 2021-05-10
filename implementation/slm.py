@@ -45,7 +45,7 @@ class SLM(keras.Model):
         self.soft = layers.Activation('softmax')
 
     def call(self, inputs):
-        inputs, target_indices = inputs
+        inputs, target_indices, type_container_id, leaf_types, root_types, json_type_containers = inputs
 
         if self.print_shape: print('inputs.shape: %s' % inputs.shape)
 

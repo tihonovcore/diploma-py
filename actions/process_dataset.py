@@ -7,12 +7,14 @@ from random import shuffle
 
 
 class ProcessedDataset:
-    def __init__(self, composed, left_brothers, target_indices, targets, type_container_id, json_type_containers, integer2string, string2integer):
+    def __init__(self, composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, json_type_containers, integer2string, string2integer):
         self.composed = composed
         self.left_brothers = left_brothers
         self.target_indices = target_indices
         self.targets = targets
         self.type_container_id = type_container_id
+        self.types_for_leaf_paths = types_for_leaf_paths
+        self.types_for_root_path = types_for_root_path
         self.json_type_containers = json_type_containers
         self.integer2string = integer2string
         self.string2integer = string2integer
@@ -40,6 +42,8 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
     composed = []
     left_brothers = []
     target_indices = []
+    types_for_leaf_paths = []
+    types_for_root_path = []
     targets = []
     json_type_containers = []
     type_container_id = []
@@ -57,11 +61,15 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
                 leaf_paths = parsed_sample["leafPaths"]
                 root_path = parsed_sample["rootPath"]
                 brothers = parsed_sample["leftBrothers"]
+                leaf_types = parsed_sample["typesForLeafPaths"]
+                root_types = parsed_sample["typesForRootPath"]
                 index_among_brothers = parsed_sample["indexAmongBrothers"]
                 target = parsed_sample["target"]
 
                 composed.append(leaf_paths + [root_path])
                 left_brothers.append(brothers)
+                types_for_leaf_paths.append(leaf_types)
+                types_for_root_path.append(root_types)
                 target_indices.append(index_among_brothers)
                 targets.append(to_vector(target))
                 type_container_id.append(len(json_type_containers))
@@ -69,8 +77,8 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
         with open(path_to_types, 'r') as json_types:
             json_type_containers.append(json_types.read())
 
-    zipped = list(zip(composed, left_brothers, target_indices, targets, type_container_id))
+    zipped = list(zip(composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path))
     if shuffle_dataset: shuffle(zipped)
-    composed, left_brothers, target_indices, targets, type_container_id = list(zip(*zipped))
+    composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path = list(zip(*zipped))
 
-    return ProcessedDataset(composed, left_brothers, target_indices, targets, type_container_id, json_type_containers, index2word, word2index)
+    return ProcessedDataset(composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, json_type_containers, index2word, word2index)

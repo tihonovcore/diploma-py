@@ -1,11 +1,12 @@
 import tensorflow as tf
 
 from actions.find_possible_children import parent_id_to_children_ids
+from actions.process_dataset import ProcessedDataset
 from configuration import Configuration
 from numpy import argmax
 
 
-def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
+def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset: ProcessedDataset, slm):
     real = []
 
     actual = []
@@ -24,8 +25,11 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset, slm):
         composed_batch = tf.ragged.constant(processed_dataset.composed[begin:begin + batch_size])
         left_brothers_batch = tf.ragged.constant(processed_dataset.left_brothers[begin:begin + batch_size])
         indices_batch = tf.constant(processed_dataset.target_indices[begin:begin + batch_size])
+        leaf_types = processed_dataset.types_for_leaf_paths[begin:begin + batch_size]
+        root_types = processed_dataset.types_for_root_path[begin:begin + batch_size]
+        type_container_id_batch = processed_dataset.type_container_id[begin:begin + batch_size]
 
-        result = slm.call((composed_batch, indices_batch))
+        result = slm.call((composed_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.json_type_containers))
 
         empty_children_ids_count = 0
         for (res, cmp, left_brothers) in zip(result, composed_batch, left_brothers_batch):
