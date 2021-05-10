@@ -25,6 +25,9 @@ def parent_id_to_children_ids(parent_kind_id, left_brothers_kind_ids):
     with open(Configuration.parent_child_json, 'r') as file:
         parent2child = json.loads(file.read())
 
+    if len(left_brothers_kind_ids) != 0 and left_brothers_kind_ids[-1] == Configuration.string2integer["AFTER_LAST"]:
+        return []
+
     if parent_kind_id not in list(map(lambda s: Configuration.string2integer[s], ["BODY", "CLASS_BODY", "BLOCK", "FILE", "VALUE_PARAMETER_LIST", "STRING_TEMPLATE", "WHEN", "IMPORT_LIST", "VALUE_ARGUMENT_LIST", "TYPE_ARGUMENT_LIST", "TYPE_PARAMETER_LIST"])):
         context = [parent_kind_id]
         context.extend(left_brothers_kind_ids.numpy())
