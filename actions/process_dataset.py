@@ -5,9 +5,11 @@ from configuration import Configuration
 from os import walk
 from random import shuffle
 
+from type_embeddings.question_model import QuestionModel
+
 
 class ProcessedDataset:
-    def __init__(self, composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, json_type_containers, integer2string, string2integer):
+    def __init__(self, composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, type_container_embeddings, integer2string, string2integer):
         self.composed = composed
         self.left_brothers = left_brothers
         self.target_indices = target_indices
@@ -15,7 +17,7 @@ class ProcessedDataset:
         self.type_container_id = type_container_id
         self.types_for_leaf_paths = types_for_leaf_paths
         self.types_for_root_path = types_for_root_path
-        self.json_type_containers = json_type_containers
+        self.type_container_embeddings = type_container_embeddings
         self.integer2string = integer2string
         self.string2integer = string2integer
 
@@ -74,8 +76,14 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
                 targets.append(to_vector(target))
                 type_container_id.append(len(json_type_containers))
 
+        model = QuestionModel()
+        model.load_weights(Configuration.saved_type_model)
+        type_embeddings = model.type_embeddings
+
         with open(path_to_types, 'r') as json_types:
-            json_type_containers.append(json_types.read())
+            container = json.loads(json_types.read())
+            class_embeddings, _, _ = type_embeddings(container)
+            json_type_containers.append(class_embeddings)
 
     zipped = list(zip(composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path))
     if shuffle_dataset: shuffle(zipped)

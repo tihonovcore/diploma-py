@@ -48,7 +48,7 @@ def train_model(processed_dataset: ProcessedDataset, slm=SLM(batch_size=20)):
             impossible_children_batch = get_weights_batch(x_batch, brothers_batch)
 
             with tf.GradientTape() as tape:
-                reconstructed = slm((x_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.json_type_containers))
+                reconstructed = slm((x_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
 
                 metric.update_state(y_pred=reconstructed, y_true=tf.argmax(y_batch, axis=1))
                 ls = loss(y_batch, reconstructed, impossible_children_batch)
