@@ -23,7 +23,16 @@ def generate_single_question(inputs):
     function_id_count = len(inputs["functions"])
 
     while True:
-        question_id = random.choice([i for i in range(Configuration.question_type_count)])
+        question_id = random.choices(
+            [i for i in range(Configuration.question_type_count)],
+            weights=[
+                1 / 8, 1 / 32, 1 / 32, 1 / 32, 1 / 32,
+                1 / 24, 1 / 24, 1 / 16, 1 / 24, 1 / 16,
+                1 / 16, 1 / 16, 1 / 8,
+                1 / 16, 1 / 16, 1 / 8
+            ],
+            k=1
+        )[0]
 
         # (A, B): A is subtype B
         if question_id == 0:
