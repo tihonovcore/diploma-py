@@ -49,8 +49,110 @@ class SLM(keras.Model):
 
         if self.print_shape: print('inputs.shape: %s' % inputs.shape)
 
+        use_way = 2
+
         # (samples, paths_count, len_paths) --> (samples, paths_count, len_paths, node_embedding)
-        e = self.node_embedding(inputs)
+        if use_way == 0:
+            e = self.node_embedding(inputs)
+        elif use_way == 1:
+            def get_type_and_container_tables():
+                type_table = []
+                container_ids_table = []
+                for (composed, sample_leaf_type_info, sample_root_type_info, current_type_container_id) in zip(inputs, leaf_types, root_types, type_container_id):
+                    type_table_for_sample = []
+                    container_ids_table_for_sample = []
+                    for (old_path, path_type_info) in zip(composed, sample_leaf_type_info + [sample_root_type_info]):
+                        type_table_for_path = []
+                        container_ids_table_for_path = []
+                        for (index, _) in enumerate(old_path):
+                            if index in path_type_info:
+                                type_index = path_type_info[str(index)]
+                                type_table_for_path.append(type_index)
+                                container_ids_table_for_path.append(current_type_container_id)
+                            else:
+                                type_table_for_path.append(-1.0)
+                                container_ids_table_for_path.append(-1.0)
+                        type_table_for_sample.append(type_table_for_path)
+                        container_ids_table_for_sample.append(container_ids_table_for_path)
+                    type_table.append(type_table_for_sample)
+                    container_ids_table.append(container_ids_table_for_sample)
+
+                return tf.ragged.constant(type_table), tf.ragged.constant(container_ids_table)
+
+            type_table, container_table = get_type_and_container_tables()
+            print('type_table.shape: %s' % type_table.shape)
+            print('container_table.shape: %s' % container_table.shape)
+
+            def embed_kind_and_type__node(x):
+                kind_id = int(x[0].numpy())
+                type_id = int(x[1].numpy())
+                container_id = int(x[2].numpy())
+
+                e_kind = self.node_embedding(kind_id)
+                if type_id != -1 and container_id != -1:
+                    e_type = type_container_embeddings[container_id][type_id]
+                else:
+                    e_type = tf.zeros(Configuration.type_embedding_dim)
+
+                result = tf.concat([e_kind, e_type], axis=0)
+                return result, result, result
+
+            def embed_kind_and_type__path(x):
+                return tf.map_fn(embed_kind_and_type__node, x)
+
+            def embed_kind_and_type__sample(x):
+                return tf.map_fn(embed_kind_and_type__path, x)
+
+            e, _, _ = tf.map_fn(embed_kind_and_type__sample, (inputs, type_table, container_table))
+        elif use_way == 2:
+            def new_with_node(sample_index, path_index):
+                def _new_with_node(x):
+                    kind_emb = x[0]
+                    node_index = x[1][0].numpy()
+
+                    current_leaf_types = leaf_types[sample_index]
+                    current_root_types = root_types[sample_index]
+                    composed_types = current_leaf_types + [current_root_types]
+                    type_map = composed_types[path_index]
+
+                    container_id = type_container_id[sample_index]
+
+                    if str(node_index) in type_map:
+                        type_id = type_map[str(node_index)].numpy()
+                    else:
+                        type_id = -1
+
+                    if type_id != -1 and container_id != -1:
+                        type_emb = type_container_embeddings[container_id][type_id]
+                    else:
+                        type_emb = tf.zeros(Configuration.type_embedding_dim)
+
+                    return tf.concat([kind_emb, type_emb], axis=0), x[1]
+
+                return _new_with_node
+
+            def new_with_path(sample_index):
+                def _new_with_path(x):
+                    path = x[0]
+                    path_index = x[1][0].numpy()
+                    node_indices = tf.expand_dims(tf.range(path.shape[0], dtype=tf.int32), 1)
+
+                    e, _ = tf.map_fn(new_with_node(sample_index, path_index), (path, node_indices))
+                    return e, x[1]
+
+                return _new_with_path
+
+            def new_with_sample(x):
+                embedding_for_composed = x[0]
+                sample_index = x[1][0].numpy()
+
+                path_indices = tf.expand_dims(tf.range(embedding_for_composed.shape[0], dtype=tf.int32), 1)
+                e, _ = tf.map_fn(new_with_path(sample_index), (embedding_for_composed, path_indices))
+                return e, x[1]
+
+            e = self.node_embedding(inputs)
+            sample_indices = tf.expand_dims(tf.range(e.shape[0], dtype=tf.int32), 1)
+            e, _ = tf.map_fn(new_with_sample, (e, sample_indices))
         if self.print_shape: print('e.shape: %s' % e.shape)
 
         # (samples, paths_count, len_paths, node_embedding) --> (samples * paths_count, len_paths, node_embedding)
