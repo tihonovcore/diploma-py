@@ -23,6 +23,14 @@ if __name__ == '__main__':
 
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
+    samples_cnt = len(file_names)
+    test_size = samples_cnt // 10
+    train_size = samples_cnt - test_size
+
+    random.shuffle(file_names)
+    train_names = file_names[:train_size]
+    test_names = file_names[train_size:]
+
     print('start question generation')
     questions = []
     for file_number, name in enumerate(file_names):
@@ -31,14 +39,6 @@ if __name__ == '__main__':
 
         questions.append(generate_questions(inputs, Configuration.questions_per_file_train))
     print('questions have generated')
-
-    samples_cnt = len(file_names)
-    test_size = samples_cnt // 10
-    train_size = samples_cnt - test_size
-
-    random.shuffle(file_names)
-    train_names = file_names[:train_size]
-    test_names = file_names[train_size:]
 
     train_questions = questions[:train_size]
     test_questions = questions[train_size:]
