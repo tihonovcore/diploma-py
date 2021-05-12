@@ -1,4 +1,5 @@
 import json
+import random
 from os import walk
 from os.path import join
 
@@ -31,9 +32,20 @@ if __name__ == '__main__':
         questions.append(generate_questions(inputs, Configuration.questions_per_file_train))
     print('questions have generated')
 
+    samples_cnt = len(file_names)
+    test_size = samples_cnt // 10
+    train_size = samples_cnt - test_size
+
+    random.shuffle(file_names)
+    train_names = file_names[:train_size]
+    test_names = file_names[train_size:]
+
+    train_questions = questions[:train_size]
+    test_questions = questions[train_size:]
+
     for epoch in range(Configuration.type_embedding_model_epochs_count):
         print('start epoch %d' % epoch)
-        for file_number, (name, questions_for_this_file) in enumerate(zip(file_names, questions)):
+        for file_number, (name, questions_for_this_file) in enumerate(zip(train_names, train_questions)):
 
             with open(name, 'r') as file:
                 inputs = json.load(file)
@@ -48,7 +60,7 @@ if __name__ == '__main__':
                 grads = tape.gradient(ls, model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
-            percent = (file_number + 1) / (len(file_names) / 100)
+            percent = (file_number + 1) / (train_size / 100)
             print("%.4f%% metric    = %.4f" % (percent, metric.result()))
 
         print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
@@ -59,20 +71,11 @@ if __name__ == '__main__':
     model = QuestionModel()
     model.load_weights(Configuration.saved_type_model)
 
-    print('start question generation for testing')
-    questions = []
-    for file_number, name in enumerate(file_names):
-        with open(name, 'r') as file:
-            inputs = json.load(file)
-
-        questions.append(generate_questions(inputs, Configuration.questions_per_file_test))
-    print('questions for testing have generated')
-
     model.ok = [0 for _ in range(model.question_count)]
     model.cnt = [0 for _ in range(model.question_count)]
 
     test_metric = tf.keras.metrics.BinaryAccuracy('accuracy')
-    for file_number, (name, questions_for_this_file) in enumerate(zip(file_names, questions)):
+    for file_number, (name, questions_for_this_file) in enumerate(zip(test_names, test_questions)):
         with open(name, 'r') as file:
             inputs = json.load(file)
 
@@ -81,7 +84,7 @@ if __name__ == '__main__':
 
             test_metric.update_state(y_true=[real], y_pred=[actual])
 
-        percent = (file_number + 1) / (len(file_names) / 100)
+        percent = (file_number + 1) / (test_size / 100)
         print("%.4f%% test_metric = %.4f" % (percent, test_metric.result()))
 
     print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
