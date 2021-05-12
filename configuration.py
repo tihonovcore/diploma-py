@@ -29,7 +29,7 @@ class Configuration:
     predict_batch_size = 10
 
     vocabulary_size = 111
-    node_embedding_dim = 32
+    node_embedding_dim = 16
     path_embedding_dim = 128
     encoder_ff_first_layer_dim = 128
     encoder_attention_heads_count = 8
@@ -46,7 +46,7 @@ class Configuration:
     type_embedding_model_epochs_count = 10
 
     basic_types_count = 11
-    type_embedding_dim = 128
+    type_embedding_dim = 96
 
     question_type_count = 16
     questions_per_file_train = 5

@@ -33,7 +33,7 @@ class SLM(keras.Model):
             trainable=True,
         )
         self.W_g = tf.Variable(
-            initial_value=W_init(shape=(2 * path_embedding_dim, node_embedding_dim), dtype="float32"),
+            initial_value=W_init(shape=(2 * path_embedding_dim, Configuration.node_embedding_dim + Configuration.type_embedding_dim), dtype="float32"),
             trainable=True
         )
         self.C_i = tf.Variable(
@@ -242,7 +242,19 @@ class SLM(keras.Model):
         h = self.relu(h)
         if self.print_shape: print('h.shape: %s' % h.shape)
 
-        result = self.soft(tf.matmul(h, tf.transpose(self.node_embedding.weights[0])))
-        if self.print_shape: print('result.shape: %s' % result.shape)
+        # split h to `kind` and `type`
+        h, t = h[:, :Configuration.node_embedding_dim], h[:, Configuration.node_embedding_dim:]
+        kind_result = self.soft(tf.matmul(h, tf.transpose(self.node_embedding.weights[0])))
+        if self.print_shape: print('kind_result.shape: %s' % kind_result.shape)
 
-        return result
+        # get distribution on types
+        type_result = []
+        for current_type_container_id, predicted_type in zip(type_container_id, t):
+            all_types = tf.convert_to_tensor(type_container_embeddings[current_type_container_id])
+            predicted_type = tf.reshape(predicted_type, [1] + predicted_type.shape)
+            distribution = tf.matmul(predicted_type, all_types, transpose_b=True)
+            distribution = self.soft(distribution)
+            distribution = tf.reshape(distribution, distribution.shape[1:])
+            type_result.append(distribution)
+
+        return kind_result
