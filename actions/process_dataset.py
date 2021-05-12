@@ -77,6 +77,7 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
                 type_container_id.append(len(json_type_containers))
 
         model = QuestionModel()
+        model.trainable = False
         model.load_weights(Configuration.saved_type_model)
         type_embeddings = model.type_embeddings
 
