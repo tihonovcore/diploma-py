@@ -1,10 +1,13 @@
 import json
 import re
 import subprocess
+import tensorflow as tf
+
 from os import walk
 from os.path import join
 from random import shuffle
 
+from actions.find_possible_children import get_weights_batch
 from configuration import Configuration
 from implementation.slm import SLM
 from type_embeddings.question_model import QuestionModel
@@ -64,9 +67,29 @@ if __name__ == '__main__':
             with open(Configuration.cooperative__types, 'r') as json_types:
                 types_info = json.load(json_types)
 
+            leaf_paths = paths_info["leafPaths"]
+            root_path = paths_info["rootPath"]
+            left_brothers = paths_info["leftBrothers"]
+            leaf_types = paths_info["typesForLeafPaths"]
+            root_types = paths_info["typesForRootPath"]
+            index_among_brothers = paths_info["indexAmongBrothers"]
+
             class_embeddings, _, _ = type_embeddings(types_info)
 
-        #     make_prediction()
+            composed = leaf_paths + [root_path]
+            type_container_id = [0]  # there is single container
+            type_container_embeddings = [class_embeddings]
+            leaf_types = [leaf_types]
+            root_types = [root_types]
+
+            composed = tf.ragged.constant([composed], dtype='float32')
+            left_brothers = tf.ragged.constant([left_brothers])
+            index_among_brothers = tf.constant([index_among_brothers])
+
+            reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
+
+            impossible_children_batch = get_weights_batch(composed, left_brothers)
+
         #     './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.OnPredict.testTTT" -q'
 
         if status == "SUCC":
