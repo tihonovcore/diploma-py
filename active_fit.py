@@ -96,14 +96,23 @@ if __name__ == '__main__':
 
                 syntax_ls = syntax_loss(None, reconstructed, impossible_children)
 
-                #     './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.OnPredict.testTTT" -q'
+                with open(Configuration.cooperative__send, 'w') as send:
+                    kind = tf.argmax(reconstructed).numpy()[0]
+                    kind = Configuration.integer2string[kind]
+                    request = '{ "kind": "%s", "type": %d }' % (kind, 0)
+                    send.write(request)
+
+                import datetime
+                ttt = datetime.datetime.now()
+                _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
+                print(datetime.datetime.now() - ttt)
 
             grads = tape.gradient(syntax_ls, slm.trainable_weights)
             optimizer.apply_gradients(zip(grads, slm.trainable_weights))
 
             print("last loss = %.4f" % syntax_ls)
 
-            with open(Configuration.cooperative__take) as response_from_kotlin:
+            with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
                 status = response_from_kotlin.read()
 
         if status == "SUCC":
