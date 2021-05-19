@@ -56,7 +56,7 @@ if __name__ == '__main__':
     shuffle(file_paths)
 
     # TODO: use batches?
-    for file_path in file_paths[:1]:
+    for file_path in file_paths:
         with open(Configuration.cooperative__send, 'w') as request:
             request.write(file_path)
 
@@ -65,40 +65,45 @@ if __name__ == '__main__':
         with open(Configuration.cooperative__take) as response_from_kotlin:
             status = response_from_kotlin.read()
 
-        all_predicted_kinds = []
-        while status != "SUCC" and status != "FAIL":
-            with open(Configuration.cooperative__paths, 'r') as json_paths:
-                paths_info = json.load(json_paths)
-            with open(Configuration.cooperative__types, 'r') as json_types:
-                types_info = json.load(json_types)
+        with tf.GradientTape() as tape:
+            all_predicted_kinds = []
+            all_syntax_losses = []
 
-            leaf_paths = paths_info["leafPaths"]
-            root_path = paths_info["rootPath"]
-            left_brothers = paths_info["leftBrothers"]
-            leaf_types = paths_info["typesForLeafPaths"]
-            root_types = paths_info["typesForRootPath"]
-            index_among_brothers = paths_info["indexAmongBrothers"]
-
-            class_embeddings, _, _ = type_embeddings(types_info)
-
-            composed = leaf_paths + [root_path]
-            type_container_id = [0]  # there is single container
-            type_container_embeddings = [class_embeddings]
-            leaf_types = [leaf_types]
-            root_types = [root_types]
-
-            composed = tf.ragged.constant([composed], dtype='float32')
-            left_brothers = tf.ragged.constant([left_brothers])
-            index_among_brothers = tf.constant([index_among_brothers])
-
-            possible_children, impossible_children = get_weights_batch(composed, left_brothers)
-            possible_children = possible_children[0]  # single element at batch
+            while status != "SUCC" and status != "FAIL":
+                with open(Configuration.cooperative__paths, 'r') as json_paths:
+                    paths_info = json.load(json_paths)
+                with open(Configuration.cooperative__types, 'r') as json_types:
+                    types_info = json.load(json_types)
+    
+                leaf_paths = paths_info["leafPaths"]
+                root_path = paths_info["rootPath"]
+                left_brothers = paths_info["leftBrothers"]
+                leaf_types = paths_info["typesForLeafPaths"]
+                root_types = paths_info["typesForRootPath"]
+                index_among_brothers = paths_info["indexAmongBrothers"]
+    
+                class_embeddings, _, _ = type_embeddings(types_info)
+    
+                composed = leaf_paths + [root_path]
+                type_container_id = [0]  # there is single container
+                type_container_embeddings = [class_embeddings]
+                leaf_types = [leaf_types]
+                root_types = [root_types]
+    
+                composed = tf.ragged.constant([composed], dtype='float32')
+                left_brothers = tf.ragged.constant([left_brothers])
+                index_among_brothers = tf.constant([index_among_brothers])
+    
+                possible_children, impossible_children = get_weights_batch(composed, left_brothers)
+                possible_children = possible_children[0]  # single element at batch
 
             with tf.GradientTape() as tape:
                 reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
 
                 syntax_ls = syntax_loss(None, reconstructed, impossible_children)
+                all_syntax_losses.append(syntax_ls)
 
+                reconstructed = tf.reshape(reconstructed, (Configuration.vocabulary_size, ))  # single element at batch
                 with open(Configuration.cooperative__send, 'w') as send:
                     kind_id = random.randrange(len(possible_children))
                     kind_str = Configuration.integer2string[kind_id]
@@ -114,17 +119,22 @@ if __name__ == '__main__':
                 _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
                 print(datetime.datetime.now() - ttt)
 
-            grads = tape.gradient(syntax_ls, slm.trainable_weights)
-            optimizer.apply_gradients(zip(grads, slm.trainable_weights))
+                with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
+                    status = response_from_kotlin.read()
 
-            print("last loss = %.4f" % syntax_ls)
-
-            with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
-                status = response_from_kotlin.read()
+            full_loss = tf.constant(0.0)
+            for ls in all_syntax_losses:
+                full_loss = full_loss + ls
 
         if status == "SUCC":
-            pass  # good loss
+            grads = tape.gradient(full_loss, slm.trainable_weights)
+            optimizer.apply_gradients(zip(grads, slm.trainable_weights))
+
+            print("last loss = %.4f" % full_loss)
         elif status == "FAIL":
-            pass  # bad loss
+            grads = tape.gradient(full_loss, slm.trainable_weights)
+            optimizer.apply_gradients(zip(grads, slm.trainable_weights))
+
+            print("last loss = %.4f" % full_loss)
 
 # TODO: can we save type embeddings? they may change, but what if not???
