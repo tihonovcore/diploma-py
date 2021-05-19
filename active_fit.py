@@ -8,6 +8,7 @@ from os.path import join
 from random import shuffle
 
 from actions.find_possible_children import get_weights_batch
+from actions.train_model import syntax_loss
 from configuration import Configuration
 from implementation.slm import SLM
 from type_embeddings.question_model import QuestionModel
@@ -49,6 +50,8 @@ if __name__ == '__main__':
 
     slm = SLM(batch_size=20)
 
+    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+
     shuffle(file_paths)
 
     # TODO: use batches?
@@ -86,11 +89,22 @@ if __name__ == '__main__':
             left_brothers = tf.ragged.constant([left_brothers])
             index_among_brothers = tf.constant([index_among_brothers])
 
-            reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
+            impossible_children = get_weights_batch(composed, left_brothers)
 
-            impossible_children_batch = get_weights_batch(composed, left_brothers)
+            with tf.GradientTape() as tape:
+                reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
 
-        #     './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.OnPredict.testTTT" -q'
+                syntax_ls = syntax_loss(None, reconstructed, impossible_children)
+
+                #     './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.OnPredict.testTTT" -q'
+
+            grads = tape.gradient(syntax_ls, slm.trainable_weights)
+            optimizer.apply_gradients(zip(grads, slm.trainable_weights))
+
+            print("last loss = %.4f" % syntax_ls)
+
+            with open(Configuration.cooperative__take) as response_from_kotlin:
+                status = response_from_kotlin.read()
 
         if status == "SUCC":
             pass  # good loss

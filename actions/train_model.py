@@ -6,7 +6,7 @@ from implementation.slm import SLM
 import tensorflow as tf
 
 
-def loss(real, actual, weights):
+def syntax_loss(real, actual, weights):
     result = []
     for (a, w) in zip(actual, weights):
         result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w))))
@@ -51,7 +51,7 @@ def train_model(processed_dataset: ProcessedDataset, slm=SLM(batch_size=20)):
                 reconstructed = slm((x_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
 
                 metric.update_state(y_pred=reconstructed, y_true=tf.argmax(y_batch, axis=1))
-                ls = loss(y_batch, reconstructed, impossible_children_batch)
+                ls = syntax_loss(y_batch, reconstructed, impossible_children_batch)
 
             grads = tape.gradient(ls, slm.trainable_weights)
             optimizer.apply_gradients(zip(grads, slm.trainable_weights))
