@@ -23,21 +23,6 @@ class ProcessedDataset:
 
 
 def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuffle_dataset=False):
-    with open(Configuration.integer2string_json, 'r') as file:
-        index2word = json.load(file)
-        for (k, v) in list(index2word.items()):
-            index2word.pop(k)
-            index2word[int(k)] = v
-
-    with open(Configuration.string2integer_json, 'r') as file:
-        word2index = json.load(file)
-
-    assert Configuration.vocabulary_size == len(index2word)
-    assert Configuration.vocabulary_size == len(word2index)
-
-    Configuration.integer2string = index2word
-    Configuration.string2integer = word2index
-
     def to_vector(n):
         return [1.0 if n == i else 0.0 for i in range(Configuration.vocabulary_size)]
 
@@ -90,4 +75,4 @@ def process_dataset(path_to_dataset_json=Configuration.train_dataset_json, shuff
     if shuffle_dataset: shuffle(zipped)
     composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path = list(zip(*zipped))
 
-    return ProcessedDataset(composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, json_type_containers, index2word, word2index)
+    return ProcessedDataset(composed, left_brothers, target_indices, targets, type_container_id, types_for_leaf_paths, types_for_root_path, json_type_containers, Configuration.integer2string, Configuration.string2integer)

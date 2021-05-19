@@ -1,3 +1,4 @@
+import json
 import pathlib
 
 from os.path import join
@@ -5,9 +6,6 @@ from os.path import join
 
 class Configuration:
     root_path = pathlib.Path(__file__).parent.absolute()
-
-    integer2string = None
-    string2integer = None
 
     parent_child_json = join(root_path, 'dataset', 'parentChild.json')
     integer2string_json = join(root_path, 'dataset', 'integer2string.json')
@@ -38,6 +36,18 @@ class Configuration:
     loss_alpha = 2.0
 
     epochs_count = 2
+
+    with open(integer2string_json, 'r') as file:
+        integer2string = json.load(file)
+        for (k, v) in list(integer2string.items()):
+            integer2string.pop(k)
+            integer2string[int(k)] = v
+
+    with open(string2integer_json, 'r') as file:
+        string2integer = json.load(file)
+
+    assert vocabulary_size == len(integer2string)
+    assert vocabulary_size == len(string2integer)
 
     # Question model configuration:
 
