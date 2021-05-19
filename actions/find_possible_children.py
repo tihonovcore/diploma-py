@@ -6,7 +6,8 @@ from configuration import Configuration
 
 
 def get_weights_batch(x_batch, left_brothers_batch):
-    result = []
+    impossible_result = []
+    possible_result = []
     for sample, left_brothers_kind_ids in zip(x_batch, left_brothers_batch):
         root_path = sample[-1]
         parent_kind_id = root_path[-1]
@@ -14,9 +15,10 @@ def get_weights_batch(x_batch, left_brothers_batch):
         possible_children = parent_id_to_children_ids(parent_kind_id, left_brothers_kind_ids)
         impossible_children = list(filter(lambda c: c not in possible_children, [i for i in range(Configuration.vocabulary_size)]))
 
-        result.append(impossible_children)
+        impossible_result.append(impossible_children)
+        possible_result.append(possible_children)
 
-    return tf.ragged.constant(result)
+    return possible_result, tf.ragged.constant(impossible_result)
 
 
 def parent_id_to_children_ids(parent_kind_id, left_brothers_kind_ids):

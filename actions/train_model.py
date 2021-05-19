@@ -45,7 +45,7 @@ def train_model(processed_dataset: ProcessedDataset, slm=SLM(batch_size=20)):
         print("Start of epoch %d" % epoch)
 
         for batch_number, (x_batch, brothers_batch, indices_batch, type_container_id_batch, leaf_types, root_types, y_batch) in enumerate(train_dataset):
-            impossible_children_batch = get_weights_batch(x_batch, brothers_batch)
+            _, impossible_children_batch = get_weights_batch(x_batch, brothers_batch)
 
             with tf.GradientTape() as tape:
                 reconstructed = slm((x_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))

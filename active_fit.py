@@ -1,4 +1,5 @@
 import json
+import random
 import re
 import subprocess
 import tensorflow as tf
@@ -64,6 +65,7 @@ if __name__ == '__main__':
         with open(Configuration.cooperative__take) as response_from_kotlin:
             status = response_from_kotlin.read()
 
+        all_predicted_kinds = []
         while status != "SUCC" and status != "FAIL":
             with open(Configuration.cooperative__paths, 'r') as json_paths:
                 paths_info = json.load(json_paths)
@@ -89,7 +91,8 @@ if __name__ == '__main__':
             left_brothers = tf.ragged.constant([left_brothers])
             index_among_brothers = tf.constant([index_among_brothers])
 
-            impossible_children = get_weights_batch(composed, left_brothers)
+            possible_children, impossible_children = get_weights_batch(composed, left_brothers)
+            possible_children = possible_children[0]  # single element at batch
 
             with tf.GradientTape() as tape:
                 reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
@@ -97,9 +100,13 @@ if __name__ == '__main__':
                 syntax_ls = syntax_loss(None, reconstructed, impossible_children)
 
                 with open(Configuration.cooperative__send, 'w') as send:
-                    kind = tf.argmax(reconstructed).numpy()[0]
-                    kind = Configuration.integer2string[kind]
-                    request = '{ "kind": "%s", "type": %d }' % (kind, 0)
+                    kind_id = random.randrange(len(possible_children))
+                    kind_str = Configuration.integer2string[kind_id]
+
+                    kind = tf.gather(reconstructed, possible_children)[kind_id]
+                    all_predicted_kinds.append(kind)
+
+                    request = '{ "kind": "%s", "type": %d }' % (kind_str, 0)
                     send.write(request)
 
                 import datetime
