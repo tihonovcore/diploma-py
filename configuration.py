@@ -62,7 +62,7 @@ class Configuration:
     questions_per_file_train = 50
     questions_per_file_test = 2
 
-    types_dataset = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/types'
+    types_dataset = join(root_path, 'types_dataset')
 
     kotlin_test_directory = '/home/tihonovcore/diploma/kotlin/compiler/testData/codegen/box'
     cooperative__send = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/request.txt'
