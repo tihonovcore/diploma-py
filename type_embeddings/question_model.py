@@ -11,13 +11,14 @@ class QuestionModel(keras.Model):
     def __init__(
             self,
             type_embedding_dim=Configuration.type_embedding_dim,
+            mode='lstm',
             **kwargs
     ):
         super(QuestionModel, self).__init__(name='question_model', **kwargs)
 
         self.question_count = Configuration.question_type_count
 
-        self.type_embeddings = TE()
+        self.type_embeddings = TE(mode=mode)
 
         self.compose = layers.LSTM(type_embedding_dim, name='compose')
 

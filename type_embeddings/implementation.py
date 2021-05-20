@@ -4,6 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
+from type_embeddings.encoder_transformer import EncoderTransformer
 
 
 class TE(keras.Model):
@@ -11,15 +12,27 @@ class TE(keras.Model):
             self,
             basic_types_count=Configuration.basic_types_count,
             type_embedding_dim=Configuration.type_embedding_dim,
+            mode='lstm',
             **kwargs
     ):
         super(TE, self).__init__(name='type_embeddings', **kwargs)
 
         self.basic = layers.Embedding(basic_types_count, type_embedding_dim)
 
-        self.embed_function_parameters = layers.LSTM(type_embedding_dim)
-        self.embed_members = layers.LSTM(type_embedding_dim)
-        self.embed_super_types = layers.LSTM(type_embedding_dim)
+        if mode == 'lstm':
+            self.embed_function_parameters = layers.LSTM(type_embedding_dim)
+            self.embed_members = layers.LSTM(type_embedding_dim)
+            self.embed_super_types = layers.LSTM(type_embedding_dim)
+        elif mode == 'gru':
+            self.embed_function_parameters = layers.GRU(type_embedding_dim)
+            self.embed_members = layers.GRU(type_embedding_dim)
+            self.embed_super_types = layers.GRU(type_embedding_dim)
+        elif mode == 'transformer':
+            self.embed_function_parameters = EncoderTransformer()
+            self.embed_members = EncoderTransformer()
+            self.embed_super_types = EncoderTransformer()
+        else:
+            raise Exception('wrong mode, use "lstm", "gru" or "transformer"')
 
         initializer = tf.random_normal_initializer()
         self.empty_parameters_list = tf.Variable(
