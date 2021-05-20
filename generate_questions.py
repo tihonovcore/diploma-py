@@ -1,7 +1,7 @@
 import random
 
 from configuration import Configuration
-from type_embeddings.utils import get_all_properties, subtypes_of, functions_are_similar
+from utils import get_all_properties, subtypes_of, functions_are_similar
 
 
 class QuestionSample:

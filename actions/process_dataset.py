@@ -5,7 +5,7 @@ from configuration import Configuration
 from os import walk
 from random import shuffle
 
-from type_embeddings.question_model import QuestionModel
+from question_model import QuestionModel
 
 
 class ProcessedDataset:

@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
-from type_embeddings.encoder_transformer import EncoderTransformer
+from encoder_transformer import EncoderTransformer
 
 
 class TE(keras.Model):

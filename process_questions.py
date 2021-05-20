@@ -1,6 +1,6 @@
 import random
 
-from type_embeddings.generate_questions import QuestionSample
+from generate_questions import QuestionSample
 
 
 def process_questions(questions):
