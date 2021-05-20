@@ -7,7 +7,9 @@ import tensorflow as tf
 
 from configuration import Configuration
 from type_embeddings.generate_questions import generate_questions
+from type_embeddings.process_questions import process_questions
 from type_embeddings.question_model import QuestionModel
+from type_embeddings.question_statistics import print_question_statistics
 
 if __name__ == '__main__':
     file_names = []
@@ -39,6 +41,9 @@ if __name__ == '__main__':
 
         questions.append(generate_questions(inputs, Configuration.questions_per_file_train))
     print('questions have generated')
+
+    process_questions(questions)
+    print_question_statistics(questions)
 
     train_questions = questions[:train_size]
     test_questions = questions[train_size:]

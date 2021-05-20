@@ -5,10 +5,11 @@ from type_embeddings.utils import get_all_properties, subtypes_of, functions_are
 
 
 class QuestionSample:
-    def __init__(self, question_id, params, true_answer):
+    def __init__(self, question_id, params, true_answer, text):
         self.question_id = question_id
         self.params = params
         self.true_answer = true_answer
+        self.text = text
 
 
 def generate_questions(inputs, n: int):
@@ -43,7 +44,11 @@ def generate_single_question(inputs):
                 continue
 
             true_base_id = random.choice(possible_super_types)
-            return QuestionSample(question_id, [derived_id, true_base_id], 1.0)
+
+            A = inputs["classes"][derived_id]["name"]
+            B = inputs["classes"][true_base_id]["name"]
+            text = '%s is subtype %s - YES' % (A, B)
+            return QuestionSample(question_id, [derived_id, true_base_id], 1.0, text)
 
         # (A, B): A is NOT subtype B
         if question_id == 1:
@@ -56,7 +61,11 @@ def generate_single_question(inputs):
                 continue
 
             wrong_base_id = random.choice(impossible_super_types)
-            return QuestionSample(question_id, [derived_id, wrong_base_id], 0.0)
+
+            A = inputs["classes"][derived_id]["name"]
+            B = inputs["classes"][wrong_base_id]["name"]
+            text = '%s is subtype %s - NO' % (A, B)
+            return QuestionSample(question_id, [derived_id, wrong_base_id], 0.0, text)
 
         # (A, B): A is NOT subtype B, because A is function
         if question_id == 2:
@@ -66,7 +75,10 @@ def generate_single_question(inputs):
             derived_id = random.randrange(function_id_count)
             base_id = random.randrange(class_id_count)
 
-            return QuestionSample(question_id, [derived_id, base_id], 0.0)
+            A = function(inputs["classes"], inputs["functions"][derived_id])
+            B = inputs["classes"][base_id]["name"]
+            text = '%s is subtype %s - NO' % (A, B)
+            return QuestionSample(question_id, [derived_id, base_id], 0.0, text)
 
         # (A, B): A is NOT subtype B, because B is function
         if question_id == 3:
@@ -76,7 +88,10 @@ def generate_single_question(inputs):
             derived_id = random.randrange(class_id_count)
             base_id = random.randrange(function_id_count)
 
-            return QuestionSample(question_id, [derived_id, base_id], 0.0)
+            A = inputs["classes"][derived_id]["name"]
+            B = function(inputs["classes"], inputs["functions"][base_id])
+            text = '%s is subtype %s - NO' % (A, B)
+            return QuestionSample(question_id, [derived_id, base_id], 0.0, text)
 
         # (A, B): A is NOT subtype B, because A and B are functions
         if question_id == 4:
@@ -89,7 +104,10 @@ def generate_single_question(inputs):
             if base_id == derived_id:
                 base_id = (base_id + 1) % function_id_count
 
-            return QuestionSample(question_id, [derived_id, base_id], 0.0)
+            A = function(inputs["classes"], inputs["functions"][derived_id])
+            B = function(inputs["classes"], inputs["functions"][base_id])
+            text = '%s is subtype %s - NO' % (A, B)
+            return QuestionSample(question_id, [derived_id, base_id], 0.0, text)
 
         # (A, X): A contains property with type X as member
         if question_id == 5:
@@ -105,7 +123,10 @@ def generate_single_question(inputs):
             all_properties = get_all_properties(class_a, inputs)
             property_id = random.choice(all_properties)
 
-            return QuestionSample(question_id, [class_a, property_id], 1.0)
+            A = inputs["classes"][class_a]["name"]
+            X = inputs["classes"][property_id]["name"]
+            text = '%s contains member %s - YES' % (A, X)
+            return QuestionSample(question_id, [class_a, property_id], 1.0, text)
 
         # todo: this is question for `write`. need question for `read`?
         # (A, X): A contains property with type Y as member, Y is supertype of X
@@ -137,7 +158,10 @@ def generate_single_question(inputs):
             if chosen_class_id is None:
                 continue
 
-            return QuestionSample(question_id, [chosen_class_id, chosen_property_id], 1.0)
+            A = inputs["classes"][chosen_class_id]["name"]
+            X = inputs["classes"][chosen_property_id]["name"]
+            text = '%s contains member %s - YES' % (A, X)
+            return QuestionSample(question_id, [chosen_class_id, chosen_property_id], 1.0, text)
 
         # (A, X): A NOT contains property with type X as member
         if question_id == 7:
@@ -154,7 +178,10 @@ def generate_single_question(inputs):
 
             property_id = random.choice(unused_types)
 
-            return QuestionSample(question_id, [class_a, property_id], 0.0)
+            A = inputs["classes"][class_a]["name"]
+            X = inputs["classes"][property_id]["name"]
+            text = '%s contains member %s - NO' % (A, X)
+            return QuestionSample(question_id, [class_a, property_id], 0.0, text)
 
         # (A, B): A contains function with type B
         if question_id == 8:
@@ -169,7 +196,10 @@ def generate_single_question(inputs):
             container_id = random.choice(not_empty_containers)
             function_index = random.randrange(len(inputs["classes"][container_id]["functions"]))
 
-            return QuestionSample(question_id, [class_a, container_id, function_index], 1.0)
+            A = inputs["classes"][class_a]["name"]
+            B = function(inputs["classes"], inputs["classes"][container_id]["functions"][function_index])
+            text = '%s contains member %s - YES' % (A, B)
+            return QuestionSample(question_id, [class_a, container_id, function_index], 1.0, text)
 
         # (A, B): A NOT contains function with type B
         if question_id == 9:
@@ -193,7 +223,10 @@ def generate_single_question(inputs):
             if chosen_other_function_id is None:
                 continue
 
-            return QuestionSample(question_id, [class_a, chosen_other_function_id], 0.0)
+            A = inputs["classes"][class_a]["name"]
+            B = function(inputs["classes"], inputs["functions"][chosen_other_function_id])
+            text = '%s contains member %s - NO' % (A, B)
+            return QuestionSample(question_id, [class_a, chosen_other_function_id], 0.0, text)
     
         # (A, X): A contains parameter with type X
         if question_id == 10:
@@ -209,7 +242,10 @@ def generate_single_question(inputs):
             all_parameters = inputs["functions"][function_a]["parameters"]
             parameter_id = random.choice(all_parameters)
 
-            return QuestionSample(question_id, [function_a, parameter_id], 1.0)
+            A = function(inputs["classes"], inputs["functions"][function_a])
+            X = inputs["classes"][parameter_id]["name"]
+            text = '%s contains parameter %s - YES' % (A, X)
+            return QuestionSample(question_id, [function_a, parameter_id], 1.0, text)
 
         # (A, X): A contains parameter with type Y, Y is supertype of X
         if question_id == 11:
@@ -238,7 +274,10 @@ def generate_single_question(inputs):
             if chosen_function_id is None:
                 continue
 
-            return QuestionSample(question_id, [chosen_function_id, chosen_parameter_id], 1.0)
+            A = function(inputs["classes"], inputs["functions"][chosen_function_id])
+            X = inputs["classes"][chosen_parameter_id]["name"]
+            text = '%s contains parameter %s - YES' % (A, X)
+            return QuestionSample(question_id, [chosen_function_id, chosen_parameter_id], 1.0, text)
 
         # (A, X): A NOT contains parameter with type X
         if question_id == 12:
@@ -255,7 +294,10 @@ def generate_single_question(inputs):
 
             parameter_id = random.choice(unused_types)
 
-            return QuestionSample(question_id, [function_a, parameter_id], 0.0)
+            A = function(inputs["classes"], inputs["functions"][function_a])
+            X = inputs["classes"][parameter_id]["name"]
+            text = '%s contains parameter %s - NO' % (A, X)
+            return QuestionSample(question_id, [function_a, parameter_id], 0.0, text)
 
         # (A, B): A return B
         if question_id == 13:
@@ -263,7 +305,10 @@ def generate_single_question(inputs):
 
             return_type = inputs["functions"][function_a]["returnType"]
 
-            return QuestionSample(question_id, [function_a, return_type], 1.0)
+            A = function(inputs["classes"], inputs["functions"][function_a])
+            B = inputs["classes"][return_type]["name"]
+            text = '%s returns %s - YES' % (A, B)
+            return QuestionSample(question_id, [function_a, return_type], 1.0, text)
 
         # (A, B): A return C, C is subtype of B
         if question_id == 14:
@@ -282,7 +327,10 @@ def generate_single_question(inputs):
             all_supertypes = inputs["classes"][function_a]["superTypes"]
             return_type = random.choice(all_supertypes)
 
-            return QuestionSample(question_id, [function_a, return_type], 1.0)
+            A = function(inputs["classes"], inputs["functions"][function_a])
+            B = inputs["classes"][return_type]["name"]
+            text = '%s returns %s - YES' % (A, B)
+            return QuestionSample(question_id, [function_a, return_type], 1.0, text)
 
         # (A, B): A NOT return B
         if question_id == 15:
@@ -297,4 +345,17 @@ def generate_single_question(inputs):
 
             return_type = random.choice(unused_types)
 
-            return QuestionSample(question_id, [function_a, return_type], 0.0)
+            A = function(inputs["classes"], inputs["functions"][function_a])
+            B = inputs["classes"][return_type]["name"]
+            text = '%s returns %s - NO' % (A, B)
+            return QuestionSample(question_id, [function_a, return_type], 0.0, text)
+
+
+def function(classes, fn):
+    params = fn["parameters"]
+    returns = fn["returnType"]
+
+    params = list(map(lambda p: classes[p]["name"], params))
+    returns = classes[returns]["name"]
+
+    return '(' + ", ".join(params) + ') -> ' + returns
