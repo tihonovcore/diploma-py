@@ -52,7 +52,11 @@ if __name__ == '__main__':
 
             for single_question in questions_for_this_file:
                 with tf.GradientTape() as tape:
-                    actual, real = model([inputs, single_question])
+                    try:
+                        actual, real = model([inputs, single_question])
+                    except BaseException as err:
+                        print(err)
+                        continue
 
                     metric.update_state(y_true=[real], y_pred=[actual])
                     ls = loss(y_true=tf.constant(real, shape=(1, 1)), y_pred=actual)
@@ -62,6 +66,12 @@ if __name__ == '__main__':
 
             percent = (file_number + 1) / (train_size / 100)
             print("%.4f%% metric    = %.4f" % (percent, metric.result()))
+
+            if file_number % 50 == 0:
+                model.save_weights(Configuration.saved_type_model)
+
+                print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
+                print(model.cnt)
 
         print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
         print(model.cnt)
@@ -80,7 +90,11 @@ if __name__ == '__main__':
             inputs = json.load(file)
 
         for q in questions_for_this_file:
-            actual, real = model([inputs, q])
+            try:
+                actual, real = model([inputs, q])
+            except BaseException as err:
+                print(err)
+                continue
 
             test_metric.update_state(y_true=[real], y_pred=[actual])
 
