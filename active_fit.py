@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
             file_paths.append(file_path)
 
-    question_model = QuestionModel()
+    question_model = QuestionModel(mode=Configuration.recurrent_mode)
     question_model.trainable = False
     question_model.load_weights(Configuration.saved_type_model)
     type_embeddings = question_model.type_embeddings

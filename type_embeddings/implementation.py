@@ -12,7 +12,7 @@ class TE(keras.Model):
             self,
             basic_types_count=Configuration.basic_types_count,
             type_embedding_dim=Configuration.type_embedding_dim,
-            mode='lstm',
+            mode=Configuration.recurrent_mode,
             **kwargs
     ):
         super(TE, self).__init__(name='type_embeddings', **kwargs)

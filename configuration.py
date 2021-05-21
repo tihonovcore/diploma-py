@@ -51,7 +51,9 @@ class Configuration:
 
     # Question model configuration:
 
-    saved_type_model = join(root_path, 'type_embeddings', 'weights', 'weights')
+    recurrent_mode = 'gru'
+
+    saved_type_model = join(root_path, 'type_embeddings', recurrent_mode, 'weights')
 
     type_embedding_model_epochs_count = 2
 

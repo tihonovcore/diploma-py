@@ -11,7 +11,7 @@ class QuestionModel(keras.Model):
     def __init__(
             self,
             type_embedding_dim=Configuration.type_embedding_dim,
-            mode='lstm',
+            mode=Configuration.recurrent_mode,
             **kwargs
     ):
         super(QuestionModel, self).__init__(name='question_model', **kwargs)
