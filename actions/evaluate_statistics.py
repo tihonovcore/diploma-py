@@ -29,7 +29,7 @@ def evaluate_statistics(evaluate_begin, evaluate_end, processed_dataset: Process
         root_types = processed_dataset.types_for_root_path[begin:begin + batch_size]
         type_container_id_batch = processed_dataset.type_container_id[begin:begin + batch_size]
 
-        result = slm.call((composed_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
+        result, _ = slm.call((composed_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
 
         empty_children_ids_count = 0
         for (res, cmp, left_brothers) in zip(result, composed_batch, left_brothers_batch):

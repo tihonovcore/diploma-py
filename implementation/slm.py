@@ -257,4 +257,4 @@ class SLM(keras.Model):
             distribution = tf.reshape(distribution, distribution.shape[1:])
             type_result.append(distribution)
 
-        return kind_result
+        return kind_result, type_result

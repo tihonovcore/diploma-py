@@ -33,7 +33,7 @@ if __name__ == '__main__':
         indices_batch = tf.constant(processed_dataset.target_indices[begin:begin + batch_size])
         type_container_id_batch = processed_dataset.type_container_id[begin:begin + batch_size]
 
-        batch_result = slm.call((composed_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
+        batch_result, _ = slm.call((composed_batch, indices_batch, type_container_id_batch, leaf_types, root_types, processed_dataset.type_container_embeddings))
 
         for (res, cmp, left_brothers) in zip(batch_result, composed_batch, left_brothers_batch):
             parent_id = cmp[-1][-1].numpy()
