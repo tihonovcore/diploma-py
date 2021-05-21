@@ -71,6 +71,7 @@ class Configuration:
     cooperative__take = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/answer.txt'
     cooperative__paths = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/paths.json'
     cooperative__types = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/types.json'
+    cooperative__compared_types = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/compareTypes.txt'
 
     cd = 'cd /home/tihonovcore/diploma/kotlin; '
     gradle_extract_paths = cd + './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.ExtractPaths.testTTT" -q'

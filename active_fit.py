@@ -66,6 +66,7 @@ if __name__ == '__main__':
 
         with tf.GradientTape() as tape:
             all_predicted_kinds = []
+            all_predicted_types = []
             all_syntax_losses = []
 
             while status == "PATH":
@@ -102,15 +103,20 @@ if __name__ == '__main__':
                 all_syntax_losses.append(syntax_ls)
 
                 reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
+                reconstructed_type = reconstructed_type[0]  # single element at batch
+                
                 with open(Configuration.cooperative__send, 'w') as send:
                     kind_id_among_possible = random.randrange(len(possible_children))
                     kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
                     print('%s from %d' % (kind_str, len(possible_children)))
 
-                    kind = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
-                    all_predicted_kinds.append(kind)
+                    kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
+                    all_predicted_kinds.append(kind_)
+                    
+                    type_ = tf.argmax(reconstructed_type)
+                    all_predicted_types.append(reconstructed_type[type_])
 
-                    request = '{ "kind": "%s", "type": %d }' % (kind_str, 0)
+                    request = '{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy())
                     send.write(request)
 
                 _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
@@ -118,15 +124,35 @@ if __name__ == '__main__':
                 with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
                     status = response_from_kotlin.read()
 
-            full_loss = tf.constant(0.0)
+            full_syntax_loss = tf.constant(0.0)
             for ls in all_syntax_losses:
-                full_loss = full_loss + ls
+                full_syntax_loss = full_syntax_loss + ls
+            full_syntax_loss = full_syntax_loss / tf.constant(len(all_syntax_losses), dtype='float32')
 
+            full_kind_loss = tf.constant(0.0)
             for prob in all_predicted_kinds:
                 if status == "SUCC":
-                    full_loss = full_loss - tf.math.log(prob)
+                    full_kind_loss = full_kind_loss - tf.math.log(prob)
                 elif status == "FAIL":
-                    full_loss = full_loss - tf.math.log(1.0 - prob)
+                    full_kind_loss = full_kind_loss - tf.math.log(1.0 - prob)
+            full_kind_loss = full_kind_loss / tf.constant(len(all_predicted_kinds), dtype='float32')
+
+            with open(Configuration.cooperative__compared_types) as type_result_file:
+                type_result = type_result_file.readlines()
+
+            full_type_loss = tf.constant(0.0)
+            for prob, result in zip(all_predicted_types, type_result):
+                if result == "true":
+                    full_type_loss = full_type_loss - tf.math.log(prob)
+                elif result == "false":
+                    full_type_loss = full_type_loss - tf.math.log(1.0 - prob)
+            full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
+
+            print('syntax: %.4f' % full_syntax_loss.numpy())
+            print('kinds : %.4f' % full_kind_loss.numpy())
+            print('types : %.4f' % full_type_loss.numpy())
+
+            full_loss = full_syntax_loss + full_kind_loss + full_type_loss
 
         if status == "SUCC":
             grads = tape.gradient(full_loss, slm.trainable_weights)
