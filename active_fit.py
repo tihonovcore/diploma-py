@@ -55,7 +55,6 @@ if __name__ == '__main__':
 
     shuffle(file_paths)
 
-    # TODO: use batches?
     for file_path in file_paths:
         with open(Configuration.cooperative__send, 'w') as request:
             request.write(file_path)
@@ -69,7 +68,7 @@ if __name__ == '__main__':
             all_predicted_kinds = []
             all_syntax_losses = []
 
-            while status != "SUCC" and status != "FAIL":
+            while status == "PATH":
                 with open(Configuration.cooperative__paths, 'r') as json_paths:
                     paths_info = json.load(json_paths)
                 with open(Configuration.cooperative__types, 'r') as json_types:
@@ -97,7 +96,6 @@ if __name__ == '__main__':
                 possible_children, impossible_children = get_weights_batch(composed, left_brothers)
                 possible_children = possible_children[0]  # single element at batch
 
-            with tf.GradientTape() as tape:
                 reconstructed = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
 
                 syntax_ls = syntax_loss(None, reconstructed, impossible_children)
@@ -107,6 +105,7 @@ if __name__ == '__main__':
                 with open(Configuration.cooperative__send, 'w') as send:
                     kind_id = random.randrange(len(possible_children))
                     kind_str = Configuration.integer2string[kind_id]
+                    print('%s from %d' % (kind_str, len(possible_children)))
 
                     kind = tf.gather(reconstructed, possible_children)[kind_id]
                     all_predicted_kinds.append(kind)
@@ -114,10 +113,7 @@ if __name__ == '__main__':
                     request = '{ "kind": "%s", "type": %d }' % (kind_str, 0)
                     send.write(request)
 
-                import datetime
-                ttt = datetime.datetime.now()
                 _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
-                print(datetime.datetime.now() - ttt)
 
                 with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
                     status = response_from_kotlin.read()
@@ -125,6 +121,12 @@ if __name__ == '__main__':
             full_loss = tf.constant(0.0)
             for ls in all_syntax_losses:
                 full_loss = full_loss + ls
+
+            for prob in all_predicted_kinds:
+                if status == "SUCC":
+                    full_loss = full_loss - tf.math.log(prob)
+                elif status == "FAIL":
+                    full_loss = full_loss - tf.math.log(1.0 - prob)
 
         if status == "SUCC":
             grads = tape.gradient(full_loss, slm.trainable_weights)
@@ -137,4 +139,6 @@ if __name__ == '__main__':
 
             print("last loss = %.4f" % full_loss)
 
-# TODO: can we save type embeddings? they may change, but what if not???
+        if status.startswith("ERROR"):
+            print(status)
+            break
