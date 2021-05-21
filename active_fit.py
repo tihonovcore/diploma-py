@@ -103,11 +103,11 @@ if __name__ == '__main__':
 
                 reconstructed = tf.reshape(reconstructed, (Configuration.vocabulary_size, ))  # single element at batch
                 with open(Configuration.cooperative__send, 'w') as send:
-                    kind_id = random.randrange(len(possible_children))
-                    kind_str = Configuration.integer2string[kind_id]
+                    kind_id_among_possible = random.randrange(len(possible_children))
+                    kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
                     print('%s from %d' % (kind_str, len(possible_children)))
 
-                    kind = tf.gather(reconstructed, possible_children)[kind_id]
+                    kind = tf.gather(reconstructed, possible_children)[kind_id_among_possible]
                     all_predicted_kinds.append(kind)
 
                     request = '{ "kind": "%s", "type": %d }' % (kind_str, 0)
