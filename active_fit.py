@@ -19,7 +19,7 @@ def must_be_skipped(path):
     if path[-2:] != 'kt':
         return True
 
-    if path.endswith('kt30402.kt') or path.endswith('crossTypeEquals.kt'):
+    if path.endswith('kt30402.kt') or path.endswith('crossTypeEquals.kt') or path.endswith('jsNative.kt'):
         return True
 
     with open(path) as source:
