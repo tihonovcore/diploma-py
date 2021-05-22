@@ -40,20 +40,20 @@ def equalize_yes_no(questions):
             if q.true_answer == 1.0:
                 if 0 <= q.question_id <= 4:
                     subtype_yes += 1
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     has_member_yes += 1
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     has_parameter_yes += 1
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     returns_yes += 1
             else:
                 if 0 <= q.question_id <= 4:
                     subtype_no += 1
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     has_member_no += 1
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     has_parameter_no += 1
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     returns_no += 1
 
     p_subtype_yes = min(subtype_yes, subtype_no) / subtype_yes
@@ -77,20 +77,20 @@ def equalize_yes_no(questions):
             if q.true_answer == 1.0:
                 if 0 <= q.question_id <= 4:
                     probability = p_subtype_yes
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     probability = p_has_member_yes
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     probability = p_has_parameter_yes
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     probability = p_returns_yes
             else:
                 if 0 <= q.question_id <= 4:
                     probability = p_subtype_no
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     probability = p_has_member_no
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     probability = p_has_parameter_no
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     probability = p_returns_no
 
             if random.random() < probability:

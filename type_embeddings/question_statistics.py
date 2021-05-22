@@ -27,20 +27,20 @@ def print_question_statistics(questions):
             if q.true_answer == 1.0:
                 if 0 <= q.question_id <= 4:
                     subtype_yes += 1
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     has_member_yes += 1
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     has_parameter_yes += 1
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     returns_yes += 1
             else:
                 if 0 <= q.question_id <= 4:
                     subtype_no += 1
-                elif 5 <= q.question_id <= 9:
+                elif 5 <= q.question_id <= 8:
                     has_member_no += 1
-                elif 10 <= q.question_id <= 12:
+                elif 9 <= q.question_id <= 11:
                     has_parameter_no += 1
-                elif 13 <= q.question_id <= 15:
+                elif 12 <= q.question_id <= 14:
                     returns_no += 1
 
     print('total questions:        %d' % len(all_texts))

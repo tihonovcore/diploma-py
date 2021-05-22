@@ -60,7 +60,7 @@ class Configuration:
     basic_types_count = 11
     type_embedding_dim = 96
 
-    question_type_count = 16
+    question_type_count = 15
     questions_per_file_train = 50
     questions_per_file_test = 2
 

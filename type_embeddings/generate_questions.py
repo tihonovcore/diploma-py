@@ -28,7 +28,7 @@ def generate_single_question(inputs):
             [i for i in range(Configuration.question_type_count)],
             weights=[
                 1 / 8, 1 / 32, 1 / 32, 1 / 32, 1 / 32,
-                1 / 24, 1 / 24, 1 / 16, 1 / 24, 1 / 16,
+                1 / 16, 1 / 16, 1 / 16, 1 / 16,
                 1 / 16, 1 / 16, 1 / 8,
                 1 / 16, 1 / 16, 1 / 8
             ],
@@ -128,43 +128,8 @@ def generate_single_question(inputs):
             text = '%s contains member %s - YES' % (A, X)
             return QuestionSample(question_id, [class_a, property_id], 1.0, text)
 
-        # todo: this is question for `write`. need question for `read`?
-        # (A, X): A contains property with type Y as member, Y is supertype of X
-        if question_id == 6:
-            classes_with_properties = []
-            for class_id in range(class_id_count):
-                if len(get_all_properties(class_id, inputs)) != 0:
-                    classes_with_properties.append(class_id)
-
-            if len(classes_with_properties) == 0:
-                continue
-
-            random.shuffle(classes_with_properties)
-
-            chosen_class_id = None
-            chosen_property_id = None
-            for class_id in classes_with_properties:
-                all_properties = get_all_properties(class_id, inputs)
-
-                all_subtypes = []
-                for p in all_properties:
-                    all_subtypes.extend(subtypes_of(p, inputs))
-                unused_subtypes = list(filter(lambda p: p not in all_properties, all_subtypes))
-
-                if len(unused_subtypes) != 0:
-                    chosen_class_id = class_id
-                    chosen_property_id = random.choice(unused_subtypes)
-
-            if chosen_class_id is None:
-                continue
-
-            A = inputs["classes"][chosen_class_id]["name"]
-            X = inputs["classes"][chosen_property_id]["name"]
-            text = '%s contains member %s - YES' % (A, X)
-            return QuestionSample(question_id, [chosen_class_id, chosen_property_id], 1.0, text)
-
         # (A, X): A NOT contains property with type X as member
-        if question_id == 7:
+        if question_id == 6:
             class_a = random.randrange(class_id_count)
 
             all_properties = get_all_properties(class_a, inputs)
@@ -184,7 +149,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [class_a, property_id], 0.0, text)
 
         # (A, B): A contains function with type B
-        if question_id == 8:
+        if question_id == 7:
             class_a = random.randrange(class_id_count)
 
             member_function_containers = [class_a] + inputs["classes"][class_a]["superTypes"]
@@ -202,7 +167,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [class_a, container_id, function_index], 1.0, text)
 
         # (A, B): A NOT contains function with type B
-        if question_id == 9:
+        if question_id == 8:
             class_a = random.randrange(class_id_count)
 
             current_functions = inputs["classes"][class_a]["functions"]
@@ -229,7 +194,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [class_a, chosen_other_function_id], 0.0, text)
     
         # (A, X): A contains parameter with type X
-        if question_id == 10:
+        if question_id == 9:
             functions_with_parameters = []
             for function_id in range(function_id_count):
                 if len(inputs["functions"][function_id]["parameters"]) != 0:
@@ -248,7 +213,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [function_a, parameter_id], 1.0, text)
 
         # (A, X): A contains parameter with type Y, Y is supertype of X
-        if question_id == 11:
+        if question_id == 10:
             functions_with_parameters = []
             for function_id in range(function_id_count):
                 if len(inputs["functions"][function_id]["parameters"]) != 0:
@@ -280,7 +245,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [chosen_function_id, chosen_parameter_id], 1.0, text)
 
         # (A, X): A NOT contains parameter with type X
-        if question_id == 12:
+        if question_id == 11:
             function_a = random.randrange(function_id_count)
 
             all_parameters = inputs["functions"][function_a]["parameters"]
@@ -300,7 +265,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [function_a, parameter_id], 0.0, text)
 
         # (A, B): A return B
-        if question_id == 13:
+        if question_id == 12:
             function_a = random.randrange(function_id_count)
 
             return_type = inputs["functions"][function_a]["returnType"]
@@ -311,11 +276,11 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [function_a, return_type], 1.0, text)
 
         # (A, B): A return C, C is subtype of B
-        if question_id == 14:
+        if question_id == 13:
             functions_where_return_has_supertypes = []
             for function_id in range(function_id_count):
                 return_type = inputs["functions"][function_id]["returnType"]
-                if len(inputs["classes"][function_id]["superTypes"]) != 0:
+                if len(inputs["classes"][return_type]["superTypes"]) != 0:
                     functions_where_return_has_supertypes.append(function_id)
 
             if len(functions_where_return_has_supertypes) == 0:
@@ -324,7 +289,7 @@ def generate_single_question(inputs):
             function_a = random.choice(functions_where_return_has_supertypes)
 
             return_type = inputs["functions"][function_a]["returnType"]
-            all_supertypes = inputs["classes"][function_a]["superTypes"]
+            all_supertypes = inputs["classes"][return_type]["superTypes"]
             return_type = random.choice(all_supertypes)
 
             A = function(inputs["classes"], inputs["functions"][function_a])
@@ -333,7 +298,7 @@ def generate_single_question(inputs):
             return QuestionSample(question_id, [function_a, return_type], 1.0, text)
 
         # (A, B): A NOT return B
-        if question_id == 15:
+        if question_id == 14:
             function_a = random.randrange(function_id_count)
 
             return_type = inputs["functions"][function_a]["returnType"]

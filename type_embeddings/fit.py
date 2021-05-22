@@ -29,10 +29,6 @@ if __name__ == '__main__':
     test_size = samples_cnt // 10
     train_size = samples_cnt - test_size
 
-    random.shuffle(file_names)
-    train_names = file_names[:train_size]
-    test_names = file_names[train_size:]
-
     print('start question generation')
     questions = []
     for file_number, name in enumerate(file_names):
@@ -44,6 +40,13 @@ if __name__ == '__main__':
 
     process_questions(questions)
     print_question_statistics(questions)
+
+    zipped = list(zip(file_names, questions))
+    random.shuffle(zipped)
+    file_names, questions = list(zip(*zipped))
+
+    train_names = file_names[:train_size]
+    test_names = file_names[train_size:]
 
     train_questions = questions[:train_size]
     test_questions = questions[train_size:]
@@ -72,7 +75,7 @@ if __name__ == '__main__':
             percent = (file_number + 1) / (train_size / 100)
             print("%.4f%% metric    = %.4f" % (percent, metric.result()))
 
-            if file_number % 50 == 0:
+            if (file_number + 1) % 50 == 0:
                 model.save_weights(Configuration.saved_type_model)
 
                 print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))

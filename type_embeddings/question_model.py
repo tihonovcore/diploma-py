@@ -68,54 +68,48 @@ class QuestionModel(keras.Model):
             class_a, property_id = question.params
             actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
 
-        # todo: this is question for `write`. need question for `read`?
-        # (A, X): A contains property with type Y as member, Y is supertype of X
-        if question_id == 6:
-            chosen_class_id, chosen_property_id = question.params
-            actual = self.has_as_member([class_embeddings[chosen_class_id], class_embeddings[chosen_property_id]])
-
         # (A, X): A NOT contains property with type X as member
-        if question_id == 7:
+        if question_id == 6:
             class_a, property_id = question.params
             actual = self.has_as_member([class_embeddings[class_a], class_embeddings[property_id]])
 
         # (A, B): A contains function with type B
-        if question_id == 8:
+        if question_id == 7:
             class_a, container_id, function_index = question.params
             actual = self.has_as_member([class_embeddings[class_a], member_function_embeddings[container_id][function_index]])
 
         # (A, B): A NOT contains function with type B
-        if question_id == 9:
+        if question_id == 8:
             class_a, chosen_other_function_id = question.params
             actual = self.has_as_member([class_embeddings[class_a], function_embeddings[chosen_other_function_id]])
 
         # (A, X): A contains parameter with type X
-        if question_id == 10:
+        if question_id == 9:
             function_a, parameter_id = question.params
             actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
 
         # (A, X): A contains parameter with type Y, Y is supertype of X
-        if question_id == 11:
+        if question_id == 10:
             chosen_function_id, chosen_parameter_id = question.params
             actual = self.has_as_parameter([function_embeddings[chosen_function_id], class_embeddings[chosen_parameter_id]])
 
         # (A, X): A NOT contains parameter with type X
-        if question_id == 12:
+        if question_id == 11:
             function_a, parameter_id = question.params
             actual = self.has_as_parameter([function_embeddings[function_a], class_embeddings[parameter_id]])
 
         # (A, B): A return B
-        if question_id == 13:
+        if question_id == 12:
             function_a, return_type = question.params
             actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
 
         # (A, B): A return C, C is subtype of B
-        if question_id == 14:
+        if question_id == 13:
             function_a, return_type = question.params
             actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
 
         # (A, B): A NOT return B
-        if question_id == 15:
+        if question_id == 14:
             function_a, return_type = question.params
             actual = self.returns([function_embeddings[function_a], class_embeddings[return_type]])
 
