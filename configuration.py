@@ -55,14 +55,13 @@ class Configuration:
 
     saved_type_model = join(root_path, 'type_embeddings', recurrent_mode, 'weights')
 
-    type_embedding_model_epochs_count = 2
+    type_embedding_model_epochs_count = 1
 
     basic_types_count = 11
-    type_embedding_dim = 96
+    type_embedding_dim = 16
 
     question_type_count = 15
-    questions_per_file_train = 50
-    questions_per_file_test = 2
+    questions_per_file_train = 200
 
     types_dataset = join(root_path, 'types_dataset')
 

@@ -26,7 +26,7 @@ if __name__ == '__main__':
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
     samples_cnt = len(file_names)
-    test_size = samples_cnt // 10
+    test_size = samples_cnt // 3
     train_size = samples_cnt - test_size
 
     print('start question generation')
@@ -105,6 +105,10 @@ if __name__ == '__main__':
                 continue
 
             test_metric.update_state(y_true=[real], y_pred=[actual])
+
+        if (file_number + 1) % 50 == 0:
+            print(list(map(lambda a: a[0] / a[1] if a[1] != 0 else -1, zip(model.ok, model.cnt))))
+            print(model.cnt)
 
         percent = (file_number + 1) / (test_size / 100)
         print("%.4f%% test_metric = %.4f" % (percent, test_metric.result()))
