@@ -104,14 +104,8 @@ def equalize_kt_types_with_user_types(questions):
         for q_id in range(len(questions[list_id])):
             q: QuestionSample = questions[list_id][q_id]
 
-            kotlin_appears_at_least_twice = False
             if 'kotlin' in q.text:
-                fst = q.text.find('kotlin')
-                if 'kotlin' in q.text[fst + 1:]:
-                    kotlin_appears_at_least_twice = True
-
-            if kotlin_appears_at_least_twice:
-                if random.random() < 0.5:
+                if random.random() < 0.1:
                     new_list.append(q)
             else:
                 new_list.append(q)
