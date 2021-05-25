@@ -15,7 +15,7 @@ from implementation.slm import SLM
 from type_embeddings.question_model import QuestionModel
 
 
-def predict(composed, left_brothers):
+def predict(request, composed, left_brothers):
     possible_children, impossible_children = get_weights_batch(composed, left_brothers)
     possible_children = possible_children[0]  # single element at batch
 
@@ -28,19 +28,17 @@ def predict(composed, left_brothers):
     reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
     reconstructed_type = reconstructed_type[0]  # single element at batch
 
-    with open(Configuration.cooperative__send, 'w') as send:
-        kind_id_among_possible = random.randrange(len(possible_children))
-        kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
-        print('%s from %d' % (kind_str, len(possible_children)))
+    kind_id_among_possible = random.randrange(len(possible_children))
+    kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
+    print('%s from %d' % (kind_str, len(possible_children)))
 
-        kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
-        all_predicted_kinds.append(kind_)
+    kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
+    all_predicted_kinds.append(kind_)
 
-        type_ = tf.argmax(reconstructed_type)
-        all_predicted_types.append(reconstructed_type[type_])
+    type_ = tf.argmax(reconstructed_type)
+    all_predicted_types.append(reconstructed_type[type_])
 
-        request = '{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy())
-        send.write(request)
+    request.append('{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy()))
 
 
 def must_be_skipped(path):
@@ -102,14 +100,14 @@ if __name__ == '__main__':
                     paths_info = json.load(json_paths)
                 with open(Configuration.cooperative__types, 'r') as json_types:
                     types_info = json.load(json_types)
-    
+
                 leaf_paths = paths_info["leafPaths"]
                 root_path = paths_info["rootPath"]
                 left_brothers = paths_info["leftBrothers"]
                 leaf_types = paths_info["typesForLeafPaths"]
                 root_types = paths_info["typesForRootPath"]
                 index_among_brothers = paths_info["indexAmongBrothers"]
-    
+
                 class_embeddings, _, _ = type_embeddings(types_info)
     
                 composed = leaf_paths + [root_path]
@@ -117,12 +115,17 @@ if __name__ == '__main__':
                 type_container_embeddings = [class_embeddings]
                 leaf_types = [leaf_types]
                 root_types = [root_types]
-    
+
                 composed = tf.ragged.constant([composed], dtype='float32')
                 left_brothers = tf.ragged.constant([left_brothers])
                 index_among_brothers = tf.constant([index_among_brothers])
 
-                predict(composed, left_brothers)
+                request = []
+                predict(request, composed, left_brothers)
+                print('##########')
+
+                with open(Configuration.cooperative__send, 'w') as send:
+                    send.write("\n".join(request))
 
                 _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
 
