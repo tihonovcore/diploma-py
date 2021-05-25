@@ -6,24 +6,11 @@ from tensorflow.keras import layers
 from configuration import Configuration
 
 
-class EncoderTransformer(layers.Layer):
-    def __init__(self,):
-        super(EncoderTransformer, self).__init__()
-
-        self.body = keras.Sequential([Encoder(), Encoder()]) #, Encoder(), Encoder()])
-
-    def call(self, inputs, **kwargs):
-        result = self.body(inputs)
-        result = result[0][0]
-        result = tf.reshape(result, [1] + result.shape)
-        return result
-
-
 class Encoder(layers.Layer):
     def __init__(
             self,
             type_embedding_dim=Configuration.type_embedding_dim,
-            encoder_attention_heads_count=1,
+            encoder_attention_heads_count=4,
             encoder_ff_first_layer_dim=Configuration.encoder_ff_first_layer_dim,
             rate=0.1
     ):
@@ -36,6 +23,7 @@ class Encoder(layers.Layer):
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
+        self.pool = layers.GlobalAveragePooling1D()
 
     def call(self, inputs, training):
         attn_output = self.att(inputs, inputs)
@@ -43,4 +31,5 @@ class Encoder(layers.Layer):
         out1 = self.layernorm1(inputs + attn_output)
         ffn_output = self.ffn(out1)
         ffn_output = self.dropout2(ffn_output, training=training)
-        return self.layernorm2(out1 + ffn_output)
+        result = self.layernorm2(out1 + ffn_output)
+        return self.pool(result)

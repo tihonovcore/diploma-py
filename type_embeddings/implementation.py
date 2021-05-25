@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
-from type_embeddings.encoder_transformer import EncoderTransformer
+from type_embeddings.encoder_transformer import Encoder
 
 
 class TE(keras.Model):
@@ -28,9 +28,9 @@ class TE(keras.Model):
             self.embed_members = layers.GRU(type_embedding_dim)
             self.embed_super_types = layers.GRU(type_embedding_dim)
         elif mode == 'transformer':
-            self.embed_function_parameters = EncoderTransformer()
-            self.embed_members = EncoderTransformer()
-            self.embed_super_types = EncoderTransformer()
+            self.embed_function_parameters = Encoder()
+            self.embed_members = Encoder()
+            self.embed_super_types = Encoder()
         else:
             raise Exception('wrong mode, use "lstm", "gru" or "transformer"')
 
