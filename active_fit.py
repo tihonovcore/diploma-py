@@ -15,6 +15,34 @@ from implementation.slm import SLM
 from type_embeddings.question_model import QuestionModel
 
 
+def predict(composed, left_brothers):
+    possible_children, impossible_children = get_weights_batch(composed, left_brothers)
+    possible_children = possible_children[0]  # single element at batch
+
+    _index_among_brothers = tf.constant(left_brothers.shape[0], shape=(1, ))
+    reconstructed_kind, reconstructed_type = slm((composed, _index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
+
+    syntax_ls = syntax_loss(None, reconstructed_kind, impossible_children)
+    all_syntax_losses.append(syntax_ls)
+
+    reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
+    reconstructed_type = reconstructed_type[0]  # single element at batch
+
+    with open(Configuration.cooperative__send, 'w') as send:
+        kind_id_among_possible = random.randrange(len(possible_children))
+        kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
+        print('%s from %d' % (kind_str, len(possible_children)))
+
+        kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
+        all_predicted_kinds.append(kind_)
+
+        type_ = tf.argmax(reconstructed_type)
+        all_predicted_types.append(reconstructed_type[type_])
+
+        request = '{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy())
+        send.write(request)
+
+
 def must_be_skipped(path):
     if path[-2:] != 'kt':
         return True
@@ -93,31 +121,8 @@ if __name__ == '__main__':
                 composed = tf.ragged.constant([composed], dtype='float32')
                 left_brothers = tf.ragged.constant([left_brothers])
                 index_among_brothers = tf.constant([index_among_brothers])
-    
-                possible_children, impossible_children = get_weights_batch(composed, left_brothers)
-                possible_children = possible_children[0]  # single element at batch
 
-                reconstructed_kind, reconstructed_type = slm((composed, index_among_brothers, type_container_id, leaf_types, root_types, type_container_embeddings))
-
-                syntax_ls = syntax_loss(None, reconstructed_kind, impossible_children)
-                all_syntax_losses.append(syntax_ls)
-
-                reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
-                reconstructed_type = reconstructed_type[0]  # single element at batch
-                
-                with open(Configuration.cooperative__send, 'w') as send:
-                    kind_id_among_possible = random.randrange(len(possible_children))
-                    kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
-                    print('%s from %d' % (kind_str, len(possible_children)))
-
-                    kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
-                    all_predicted_kinds.append(kind_)
-                    
-                    type_ = tf.argmax(reconstructed_type)
-                    all_predicted_types.append(reconstructed_type[type_])
-
-                    request = '{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy())
-                    send.write(request)
+                predict(composed, left_brothers)
 
                 _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
 
