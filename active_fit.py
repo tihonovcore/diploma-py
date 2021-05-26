@@ -15,7 +15,7 @@ from implementation.slm import SLM
 from type_embeddings.question_model import QuestionModel
 
 
-def predict(request, composed, left_brothers):
+def predict(request, composed, left_brothers, depth=0):
     possible_children, impossible_children = get_weights_batch(composed, left_brothers)
     possible_children = possible_children[0]  # single element at batch
 
@@ -28,7 +28,8 @@ def predict(request, composed, left_brothers):
     reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
     reconstructed_type = reconstructed_type[0]  # single element at batch
 
-    if Configuration.string2integer['AFTER_LAST'] in possible_children and random.random() < 0.5:
+    al_probability = 0.2 * max(depth, left_brothers.shape[0])
+    if Configuration.string2integer['AFTER_LAST'] in possible_children and random.random() < al_probability:
         kind_id = Configuration.string2integer['AFTER_LAST']
     else:
         kind_id_among_possible = random.randrange(len(possible_children))
@@ -55,7 +56,7 @@ def predict(request, composed, left_brothers):
     predicted_children = []
 
     while True:
-        prediction = predict(request, composed, tf.ragged.constant([predicted_children]))
+        prediction = predict(request, composed, tf.ragged.constant([predicted_children]), depth + 1)
         predicted_children.append(prediction)
 
         if prediction == Configuration.string2integer['AFTER_LAST']:
@@ -94,6 +95,8 @@ def must_be_skipped(path):
             return True
 
 
+MIN_LG = 0.00001
+
 if __name__ == '__main__':
     file_paths = []
 
@@ -116,7 +119,10 @@ if __name__ == '__main__':
 
     shuffle(file_paths)
 
-    for file_path in file_paths:
+    for file_number, file_path in enumerate(file_paths):
+        if file_number % 5 == 0:
+            slm.save_weights(Configuration.saved_model)
+
         with open(Configuration.cooperative__send, 'w') as request:
             request.write(file_path)
 
@@ -175,9 +181,9 @@ if __name__ == '__main__':
             full_kind_loss = tf.constant(0.0)
             for prob in all_predicted_kinds:
                 if status == "SUCC":
-                    full_kind_loss = full_kind_loss - tf.math.log(prob)
+                    full_kind_loss = full_kind_loss - tf.math.log(prob + MIN_LG)
                 elif status == "FAIL":
-                    full_kind_loss = full_kind_loss - tf.math.log(1.0 - prob)
+                    full_kind_loss = full_kind_loss - tf.math.log(1.0 - prob + MIN_LG)
             full_kind_loss = full_kind_loss / tf.constant(len(all_predicted_kinds), dtype='float32')
 
             with open(Configuration.cooperative__compared_types) as type_result_file:
@@ -186,9 +192,9 @@ if __name__ == '__main__':
             full_type_loss = tf.constant(0.0)
             for prob, result in zip(all_predicted_types, type_result):
                 if result == "true":
-                    full_type_loss = full_type_loss - tf.math.log(prob)
+                    full_type_loss = full_type_loss - tf.math.log(prob + MIN_LG)
                 elif result == "false":
-                    full_type_loss = full_type_loss - tf.math.log(1.0 - prob)
+                    full_type_loss = full_type_loss - tf.math.log(1.0 - prob + MIN_LG)
             full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
 
             print('syntax: %.4f' % full_syntax_loss.numpy())
@@ -210,4 +216,4 @@ if __name__ == '__main__':
 
         if status.startswith("ERROR"):
             print(status)
-            break
+            # ignore

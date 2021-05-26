@@ -9,7 +9,7 @@ import tensorflow as tf
 def syntax_loss(real, actual, weights):
     result = []
     for (a, w) in zip(actual, weights):
-        result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w))))
+        result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w) + 0.00001)))
     return tf.convert_to_tensor(result)
 
 
