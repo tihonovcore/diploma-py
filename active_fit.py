@@ -28,17 +28,52 @@ def predict(request, composed, left_brothers):
     reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
     reconstructed_type = reconstructed_type[0]  # single element at batch
 
-    kind_id_among_possible = random.randrange(len(possible_children))
-    kind_str = Configuration.integer2string[possible_children[kind_id_among_possible]]
+    if Configuration.string2integer['AFTER_LAST'] in possible_children and random.random() < 0.5:
+        kind_id = Configuration.string2integer['AFTER_LAST']
+    else:
+        kind_id_among_possible = random.randrange(len(possible_children))
+        kind_id = possible_children[kind_id_among_possible]
+
+    kind_str = Configuration.integer2string[kind_id]
     print('%s from %d' % (kind_str, len(possible_children)))
 
-    kind_ = tf.gather(reconstructed_kind, possible_children)[kind_id_among_possible]
+    kind_ = reconstructed_kind[kind_id]
     all_predicted_kinds.append(kind_)
 
-    type_ = tf.argmax(reconstructed_type)
-    all_predicted_types.append(reconstructed_type[type_])
+    type_id = tf.argmax(reconstructed_type).numpy()
+    type_ = reconstructed_type[type_id]
 
-    request.append('{ "kind": "%s", "type": %d }' % (kind_str, type_.numpy()))
+    if kind_str != 'AFTER_LAST':
+        all_predicted_types.append(type_)
+
+    request.append('{ "kind": "%s", "type": %d }' % (kind_str, type_id))
+
+    if kind_str == 'AFTER_LAST':
+        return kind_id
+
+    composed = update_paths(composed, kind_id)
+    predicted_children = []
+
+    while True:
+        prediction = predict(request, composed, tf.ragged.constant([predicted_children]))
+        predicted_children.append(prediction)
+
+        if prediction == Configuration.string2integer['AFTER_LAST']:
+            break
+
+    return kind_id
+
+
+def update_paths(old_composed, new_kind):
+    addition = [Configuration.string2integer['↓'], new_kind]
+
+    def up_path(x):
+        return tf.concat([x, addition], axis=0)
+
+    def up_batch_elem(x):
+        return tf.map_fn(up_path, x)
+
+    return tf.map_fn(up_batch_elem, old_composed)
 
 
 def must_be_skipped(path):
