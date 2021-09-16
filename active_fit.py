@@ -123,10 +123,10 @@ if __name__ == '__main__':
         if file_number % 5 == 0:
             slm.save_weights(Configuration.saved_model)
 
-        with open(Configuration.cooperative__send, 'w') as request:
-            request.write(file_path)
+        with open(Configuration.request, 'w') as communication_file:
+            communication_file.write('{ request_type: "EXTRACT_PATHS", request: "' + file_path + '" }')
 
-        _ = subprocess.run(Configuration.gradle_extract_paths, capture_output=True, shell=True)
+        _ = subprocess.run(Configuration.bash_compiler, capture_output=True, shell=True)
 
         with open(Configuration.cooperative__take) as response_from_kotlin:
             status = response_from_kotlin.read()
@@ -165,10 +165,10 @@ if __name__ == '__main__':
                 predict(request, composed, left_brothers)
                 print('##########')
 
-                with open(Configuration.cooperative__send, 'w') as send:
-                    send.write("\n".join(request))
+                with open(Configuration.request, 'w') as communication_file:
+                    communication_file.write('{ request_type: "ON_PREDICT", request: "' + "\\n".join(request) + '" }')
 
-                _ = subprocess.run(Configuration.gradle_on_predict, capture_output=True, shell=True)
+                _ = subprocess.run(Configuration.bash_compiler, capture_output=True, shell=True)
 
                 with open(Configuration.cooperative__take, 'r') as response_from_kotlin:
                     status = response_from_kotlin.read()

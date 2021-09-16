@@ -81,3 +81,8 @@ class Configuration:
     cd = 'cd /home/tihonovcore/diploma/kotlin; '
     gradle_extract_paths = cd + './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.ExtractPaths.testTTT" -q'
     gradle_on_predict = cd + './gradlew :idea:test --tests "org.jetbrains.kotlin.idea.caches.resolve.OnPredict.testTTT" -q'
+
+    request = '/home/tihonovcore/diploma/kotlin/compiler/cli/src/org/jetbrains/kotlin/diploma/actions/request.json'
+    _random_kt_file = '/home/tihonovcore/diploma/kotlin/idea/idea-core/src/org/jetbrains/kotlin/idea/core/util/PhysicalFileSystemUtils.kt'
+    bash_compiler = '/bin/bash /home/tihonovcore/diploma/kotlin/dist/kotlinc/bin/kotlinc-jvm ' + _random_kt_file
+
