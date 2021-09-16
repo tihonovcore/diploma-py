@@ -63,6 +63,12 @@ class Configuration:
     question_type_count = 15
     questions_per_file_train = 200
 
+    # 0 - don't use types                       # todo: problems with dimensions
+    # 1 - old inject type into node embedding   # todo: remove (?)
+    # 2 - inject type into node embedding       # note: too slow and memory wasted (?)
+    # 3 - inject type via context               # note: not yet implemented
+    type_injection_approach = 2
+
     types_dataset = join(root_path, 'types_dataset')
 
     kotlin_test_directory = '/home/tihonovcore/diploma/kotlin/compiler/testData/codegen/box'

@@ -49,7 +49,7 @@ class SLM(keras.Model):
 
         if self.print_shape: print('inputs.shape: %s' % inputs.shape)
 
-        use_way = 2
+        use_way = Configuration.type_injection_approach
 
         # (samples, paths_count, len_paths) --> (samples, paths_count, len_paths, node_embedding)
         if use_way == 0:
