@@ -113,13 +113,21 @@ MIN_LG = 0.00001
 def do_fit():
     file_paths = []
 
-    for root, _, files in walk(Configuration.kotlin_test_directory):
-        for file in files:
-            file_path = join(root, file)
-            if must_be_skipped(file_path):
-                continue
+    if Configuration.use_leak_cheat:
+        with open(Configuration.kotlin_test_directory, 'r') as tests:
+            for file_path in tests.read().split("\n"):
+                if must_be_skipped(file_path):
+                    continue
 
-            file_paths.append(file_path)
+                file_paths.append(file_path)
+    else:
+        for root, _, files in walk(Configuration.kotlin_test_directory):
+            for file in files:
+                file_path = join(root, file)
+                if must_be_skipped(file_path):
+                    continue
+
+                file_paths.append(file_path)
 
     question_model = QuestionModel(mode=Configuration.recurrent_mode)
     question_model.trainable = False

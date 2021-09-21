@@ -86,3 +86,6 @@ class Configuration:
     _random_kt_file = '/home/tihonovcore/diploma/kotlin/idea/idea-core/src/org/jetbrains/kotlin/idea/core/util/PhysicalFileSystemUtils.kt'
     bash_compiler = '/bin/bash /home/tihonovcore/diploma/kotlin/dist/kotlinc/bin/kotlinc-jvm ' + _random_kt_file
 
+    use_leak_cheat = True
+    if use_leak_cheat:
+        kotlin_test_directory = '/home/tihonovcore/diploma/model/tests.txt'
