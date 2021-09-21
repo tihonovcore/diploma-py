@@ -1,3 +1,4 @@
+from memory_profiler import profile
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -27,6 +28,7 @@ class Encoder(layers.Layer):
     def set_mask(self, mask):
         self.mask = mask
 
+    # @profile
     def call(self, inputs, training):
         attn_output = self.att(inputs, inputs, attention_mask=self.mask)
         attn_output = self.dropout1(attn_output, training=training)

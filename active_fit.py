@@ -8,14 +8,22 @@ from os import walk
 from os.path import join
 from random import shuffle
 
+from memory_profiler import profile
+
 from actions.find_possible_children import get_weights_batch
 from actions.train_model import syntax_loss
 from configuration import Configuration
 from implementation.slm import SLM
+from profiler.profiler import Profiler
 from type_embeddings.question_model import QuestionModel
 
 
-def predict(request, composed, left_brothers, depth=0):
+class cnt_node_holder:
+    cnt = 0
+
+
+# @profile
+def predict(request, composed, left_brothers, type_container_id, type_container_embeddings, leaf_types, root_types, index_among_brothers, slm, all_syntax_losses, all_predicted_types, all_predicted_kinds, depth=0):
     possible_children, impossible_children = get_weights_batch(composed, left_brothers)
     possible_children = possible_children[0]  # single element at batch
 
@@ -28,7 +36,10 @@ def predict(request, composed, left_brothers, depth=0):
     reconstructed_kind = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
     reconstructed_type = reconstructed_type[0]  # single element at batch
 
-    al_probability = 0.2 * max(depth, left_brothers.shape[0])
+    # todo: make probability less
+    al_probability = 1.0 * max(depth, left_brothers.shape[0])
+    cnt_node_holder.cnt += 1
+
     if Configuration.string2integer['AFTER_LAST'] in possible_children and random.random() < al_probability:
         kind_id = Configuration.string2integer['AFTER_LAST']
     else:
@@ -37,6 +48,7 @@ def predict(request, composed, left_brothers, depth=0):
 
     kind_str = Configuration.integer2string[kind_id]
     print('%s from %d' % (kind_str, len(possible_children)))
+    print()
 
     kind_ = reconstructed_kind[kind_id]
     all_predicted_kinds.append(kind_)
@@ -56,7 +68,7 @@ def predict(request, composed, left_brothers, depth=0):
     predicted_children = []
 
     while True:
-        prediction = predict(request, composed, tf.ragged.constant([predicted_children]), depth + 1)
+        prediction = predict(request, composed, tf.ragged.constant([predicted_children]), type_container_id, type_container_embeddings, leaf_types, root_types, index_among_brothers, slm, all_syntax_losses, all_predicted_types, all_predicted_kinds, depth + 1)
         predicted_children.append(prediction)
 
         if prediction == Configuration.string2integer['AFTER_LAST']:
@@ -97,7 +109,8 @@ def must_be_skipped(path):
 
 MIN_LG = 0.00001
 
-if __name__ == '__main__':
+
+def do_fit():
     file_paths = []
 
     for root, _, files in walk(Configuration.kotlin_test_directory):
@@ -114,14 +127,17 @@ if __name__ == '__main__':
     type_embeddings = question_model.type_embeddings
 
     slm = SLM(batch_size=20)
+    slm.load_weights(Configuration.saved_model)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 
-    shuffle(file_paths)
+    # shuffle(file_paths)
 
     for file_number, file_path in enumerate(file_paths):
         if file_number % 5 == 0:
             slm.save_weights(Configuration.saved_model)
+
+        print(file_path)
 
         with open(Configuration.request, 'w') as communication_file:
             communication_file.write('{ request_type: "EXTRACT_PATHS", request: "' + file_path + '" }')
@@ -150,7 +166,7 @@ if __name__ == '__main__':
                 index_among_brothers = paths_info["indexAmongBrothers"]
 
                 class_embeddings, _, _ = type_embeddings(types_info)
-    
+
                 composed = leaf_paths + [root_path]
                 type_container_id = [0]  # there is single container
                 type_container_embeddings = [class_embeddings]
@@ -162,7 +178,7 @@ if __name__ == '__main__':
                 index_among_brothers = tf.constant([index_among_brothers])
 
                 request = []
-                predict(request, composed, left_brothers)
+                predict(request, composed, left_brothers, type_container_id, type_container_embeddings, leaf_types, root_types, index_among_brothers, slm, all_syntax_losses, all_predicted_types, all_predicted_kinds)
                 print('##########')
 
                 with open(Configuration.request, 'w') as communication_file:
@@ -176,7 +192,8 @@ if __name__ == '__main__':
             full_syntax_loss = tf.constant(0.0)
             for ls in all_syntax_losses:
                 full_syntax_loss = full_syntax_loss + ls
-            full_syntax_loss = full_syntax_loss / tf.constant(len(all_syntax_losses), dtype='float32')
+            full_syntax_loss = full_syntax_loss / Configuration.vocabulary_size
+            # full_syntax_loss = full_syntax_loss / tf.constant(len(all_syntax_losses), dtype='float32')
 
             full_kind_loss = tf.constant(0.0)
             for prob in all_predicted_kinds:
@@ -184,7 +201,7 @@ if __name__ == '__main__':
                     full_kind_loss = full_kind_loss - tf.math.log(prob + MIN_LG)
                 elif status == "FAIL":
                     full_kind_loss = full_kind_loss - tf.math.log(1.0 - prob + MIN_LG)
-            full_kind_loss = full_kind_loss / tf.constant(len(all_predicted_kinds), dtype='float32')
+            # full_kind_loss = full_kind_loss / tf.constant(len(all_predicted_kinds), dtype='float32')
 
             with open(Configuration.cooperative__compared_types) as type_result_file:
                 type_result = type_result_file.readlines()
@@ -195,7 +212,7 @@ if __name__ == '__main__':
                     full_type_loss = full_type_loss - tf.math.log(prob + MIN_LG)
                 elif result == "false":
                     full_type_loss = full_type_loss - tf.math.log(1.0 - prob + MIN_LG)
-            full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
+            # full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
 
             print('syntax: %.4f' % full_syntax_loss.numpy())
             print('kinds : %.4f' % full_kind_loss.numpy())
@@ -217,3 +234,9 @@ if __name__ == '__main__':
         if status.startswith("ERROR"):
             print(status)
             # ignore
+
+        slm.save_weights(Configuration.saved_model)
+
+
+if __name__ == '__main__':
+    do_fit()

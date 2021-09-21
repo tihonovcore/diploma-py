@@ -1,4 +1,5 @@
 import tensorflow as tf
+from memory_profiler import profile
 
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -44,7 +45,8 @@ class SLM(keras.Model):
         self.relu = layers.ReLU()
         self.soft = layers.Activation('softmax')
 
-    def call(self, inputs):
+    # @profile
+    def call(self, inputs, training):
         inputs, target_indices, type_container_id, leaf_types, root_types, type_container_embeddings = inputs
 
         if self.print_shape: print('inputs.shape: %s' % inputs.shape)
