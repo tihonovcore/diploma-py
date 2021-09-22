@@ -4,6 +4,10 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/profiler/out" />
+      <excludeFolder url="file://$MODULE_DIR$/path_model/saved_model" />
+      <excludeFolder url="file://$MODULE_DIR$/type_model/gru" />
+      <excludeFolder url="file://$MODULE_DIR$/type_model/lstm" />
+      <excludeFolder url="file://$MODULE_DIR$/type_model/transformer" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
