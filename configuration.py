@@ -3,6 +3,8 @@ import pathlib
 
 from os.path import join
 
+from ModelMode import ModelMode
+
 
 class Configuration:
     root_path: str = pathlib.Path(__file__).parent.absolute()
@@ -89,3 +91,5 @@ class Configuration:
     use_leak_cheat: bool = True
     if use_leak_cheat:
         kotlin_test_directory = join(root_path, 'tests.txt')
+
+    model_mode: ModelMode = ModelMode.TYPED__INJECTION_VIA_NODES

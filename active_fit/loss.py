@@ -5,13 +5,11 @@ from configuration import Configuration
 
 class TreeGenerationLoss:
     def __init__(self):
-        self.all_predicted_kinds = []
-        self.all_predicted_types = []
         self.all_syntax_losses = []
+        self.all_predicted_kinds = []
 
         self.full_syntax_loss = tf.constant(0.0)
         self.full_kind_loss = tf.constant(0.0)
-        self.full_type_loss = tf.constant(0.0)
 
         self.MIN_LG = 0.00001
 
@@ -28,6 +26,30 @@ class TreeGenerationLoss:
                 self.full_kind_loss = self.full_kind_loss - tf.math.log(1.0 - prob + self.MIN_LG)
         # full_kind_loss = full_kind_loss / tf.constant(len(all_predicted_kinds), dtype='float32')
 
+    def print_loss(self):
+        print('syntax: %.4f' % self.full_syntax_loss.numpy())
+        print('kinds : %.4f' % self.full_kind_loss.numpy())
+
+    def get_full_loss(self):
+        return self.full_syntax_loss + self.full_kind_loss
+
+    def syntax_loss(self, real, actual, weights):
+        result = []
+        for (a, w) in zip(actual, weights):
+            result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w) + self.MIN_LG)))
+        return tf.convert_to_tensor(result)
+
+
+class TypedTreeGenerationLoss(TreeGenerationLoss):
+    def __init__(self):
+        super().__init__()
+
+        self.all_predicted_types = []
+        self.full_type_loss = tf.constant(0.0)
+
+    def eval_full_loss(self, status):
+        super().eval_full_loss(status)
+
         with open(Configuration.cooperative__compared_types) as type_result_file:
             type_result = type_result_file.readlines()
 
@@ -39,15 +61,8 @@ class TreeGenerationLoss:
         # full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
 
     def print_loss(self):
-        print('syntax: %.4f' % self.full_syntax_loss.numpy())
-        print('kinds : %.4f' % self.full_kind_loss.numpy())
+        super().print_loss()
         print('types : %.4f' % self.full_type_loss.numpy())
 
     def get_full_loss(self):
-        return self.full_syntax_loss + self.full_kind_loss + self.full_type_loss
-
-    def syntax_loss(self, real, actual, weights):
-        result = []
-        for (a, w) in zip(actual, weights):
-            result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w) + self.MIN_LG)))
-        return tf.convert_to_tensor(result)
+        return super().get_full_loss() + self.full_type_loss

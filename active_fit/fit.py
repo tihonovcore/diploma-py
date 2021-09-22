@@ -21,7 +21,7 @@ def fit(fit_environment: FitEnvironment):
         print(file_path)
 
         with tf.GradientTape() as tape:
-            loss: TreeGenerationLoss = TreeGenerationLoss()
+            loss: TreeGenerationLoss = fit_environment.create_loss()
 
             status: ResponseStatus = call_kotlin_compiler(RequestType.EXTRACT_PATHS, file_path)
             while status is ResponseStatus.PATH:
