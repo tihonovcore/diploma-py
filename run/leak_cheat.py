@@ -6,6 +6,8 @@ from random import shuffle
 from configuration import Configuration
 
 if __name__ == '__main__':
+    assert Configuration.use_leak_cheat
+
     file_paths = []
 
     for root, _, files in walk(Configuration.kotlin_test_directory):
@@ -20,7 +22,7 @@ if __name__ == '__main__':
         paths = file_paths[from_index:from_index + batch]
         print(paths)
 
-        with open('/home/tihonovcore/diploma/model/tests.txt', 'w') as tests:
+        with open(Configuration.kotlin_test_directory, 'w') as tests:
             tests.write('\n'.join(paths))
 
         result = subprocess.run('python3 /home/tihonovcore/diploma/model/active_fit.py', capture_output=True, shell=True)

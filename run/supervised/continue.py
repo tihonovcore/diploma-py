@@ -2,7 +2,7 @@ from actions.process_dataset import process_dataset
 from actions.train_model import train_model
 from actions.evaluate_statistics import evaluate_statistics
 from configuration import Configuration
-from implementation.slm import SLM
+from path_model.slm import SLM
 
 if __name__ == '__main__':
     processed_dataset = process_dataset()

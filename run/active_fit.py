@@ -13,9 +13,9 @@ from memory_profiler import profile
 from actions.find_possible_children import get_weights_batch
 from actions.train_model import syntax_loss
 from configuration import Configuration
-from implementation.slm import SLM
+from path_model.slm import SLM
 from profiler.profiler import Profiler
-from type_embeddings.question_model import QuestionModel
+from type_model.question_model import QuestionModel
 
 
 class cnt_node_holder:
@@ -48,7 +48,6 @@ def predict(request, composed, left_brothers, type_container_id, type_container_
 
     kind_str = Configuration.integer2string[kind_id]
     print('%s from %d' % (kind_str, len(possible_children)))
-    print()
 
     kind_ = reconstructed_kind[kind_id]
     all_predicted_kinds.append(kind_)

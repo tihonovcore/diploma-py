@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
-from type_embeddings.encoder_transformer import Encoder
+from type_model.encoder_transformer import Encoder
 
 
 class TE(keras.Model):
@@ -15,7 +15,7 @@ class TE(keras.Model):
             mode=Configuration.recurrent_mode,
             **kwargs
     ):
-        super(TE, self).__init__(name='type_embeddings', **kwargs)
+        super(TE, self).__init__(name='type_model', **kwargs)
 
         self.basic = layers.Embedding(basic_types_count, type_embedding_dim)
 

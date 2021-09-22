@@ -1,7 +1,7 @@
 from actions.find_possible_children import get_weights_batch
 from actions.process_dataset import ProcessedDataset
 from configuration import Configuration
-from implementation.slm import SLM
+from path_model.slm import SLM
 
 import tensorflow as tf
 

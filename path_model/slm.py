@@ -5,7 +5,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
-from implementation.encoder import Encoder
+from path_model.encoder import Encoder
 
 
 class SLM(keras.Model):

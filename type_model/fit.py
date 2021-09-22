@@ -6,10 +6,10 @@ from os.path import join
 import tensorflow as tf
 
 from configuration import Configuration
-from type_embeddings.generate_questions import generate_questions
-from type_embeddings.process_questions import process_questions
-from type_embeddings.question_model import QuestionModel
-from type_embeddings.question_statistics import print_question_statistics
+from type_model.generate_questions import generate_questions
+from type_model.process_questions import process_questions
+from type_model.question_model import QuestionModel
+from type_model.question_statistics import print_question_statistics
 
 if __name__ == '__main__':
     file_names = []

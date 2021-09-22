@@ -3,8 +3,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from configuration import Configuration
-from type_embeddings.generate_questions import QuestionSample
-from type_embeddings.implementation import TE
+from type_model.generate_questions import QuestionSample
+from type_model.implementation import TE
 
 
 class QuestionModel(keras.Model):

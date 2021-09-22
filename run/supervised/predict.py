@@ -7,7 +7,7 @@ import tensorflow as tf
 from actions.find_possible_children import parent_id_to_children_ids
 from actions.process_dataset import process_dataset
 from configuration import Configuration
-from implementation.slm import SLM
+from path_model.slm import SLM
 
 if __name__ == '__main__':
     try:

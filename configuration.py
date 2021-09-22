@@ -13,7 +13,7 @@ class Configuration:
     train_dataset_json = join(root_path, 'dataset', 'dataset.json')
     new_train_dataset_json = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/integer'
 
-    saved_model = join(root_path, 'saved_model', 'model')
+    saved_model = join(root_path, 'path_model', 'saved_model', 'weights')
 
     print_shape = False
 
@@ -53,7 +53,7 @@ class Configuration:
 
     recurrent_mode = 'gru'
 
-    saved_type_model = join(root_path, 'type_embeddings', recurrent_mode, 'weights')
+    saved_type_model = join(root_path, 'type_model', recurrent_mode, 'weights')
 
     type_embedding_model_epochs_count = 1
 
@@ -69,7 +69,7 @@ class Configuration:
     # 3 - inject type via context               # note: not yet implemented
     type_injection_approach = 2
 
-    types_dataset = join(root_path, 'types_dataset')
+    types_dataset = join(root_path, 'dataset', 'types_dataset')
 
     kotlin_test_directory = '/home/tihonovcore/diploma/kotlin/compiler/testData/codegen/box'
     cooperative__send = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/request.txt'
@@ -88,4 +88,4 @@ class Configuration:
 
     use_leak_cheat = True
     if use_leak_cheat:
-        kotlin_test_directory = '/home/tihonovcore/diploma/model/tests.txt'
+        kotlin_test_directory = join(root_path, 'tests.txt')

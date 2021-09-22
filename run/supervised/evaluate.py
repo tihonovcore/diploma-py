@@ -4,7 +4,7 @@ import sys
 from actions.evaluate_statistics import evaluate_statistics
 from actions.process_dataset import process_dataset
 from configuration import Configuration
-from implementation.slm import SLM
+from path_model.slm import SLM
 
 if __name__ == '__main__':
     try:
