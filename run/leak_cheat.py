@@ -25,7 +25,7 @@ if __name__ == '__main__':
         with open(Configuration.kotlin_test_directory, 'w') as tests:
             tests.write('\n'.join(paths))
 
-        result = subprocess.run('python3 /home/tihonovcore/diploma/model/active_fit.py', capture_output=True, shell=True)
+        result = subprocess.run('python3 /home/tihonovcore/diploma/model/legacy_active_fit.py', capture_output=True, shell=True)
         print(result.stdout.decode('utf-8'))
         print(result.stderr.decode('utf-8'))
 

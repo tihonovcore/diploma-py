@@ -5,7 +5,7 @@ from os.path import join
 
 
 class Configuration:
-    root_path = pathlib.Path(__file__).parent.absolute()
+    root_path: str = pathlib.Path(__file__).parent.absolute()
 
     parent_child_json = join(root_path, 'dataset', 'parentChild.json')
     integer2string_json = join(root_path, 'dataset', 'integer2string.json')
@@ -13,9 +13,9 @@ class Configuration:
     train_dataset_json = join(root_path, 'dataset', 'dataset.json')
     new_train_dataset_json = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/integer'
 
-    saved_model = join(root_path, 'path_model', 'saved_model', 'weights')
+    saved_model: str = join(root_path, 'path_model', 'saved_model', 'weights')
 
-    print_shape = False
+    print_shape: bool = False
 
     train_dataset_size = 6000
     test_dataset_size = 434
@@ -71,7 +71,7 @@ class Configuration:
 
     types_dataset = join(root_path, 'dataset', 'types_dataset')
 
-    kotlin_test_directory = '/home/tihonovcore/diploma/kotlin/compiler/testData/codegen/box'
+    kotlin_test_directory: str = '/home/tihonovcore/diploma/kotlin/compiler/testData/codegen/box'
     cooperative__send = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/request.txt'
     cooperative__take = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/answer.txt'
     cooperative__paths = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/paths.json'
@@ -86,6 +86,6 @@ class Configuration:
     _random_kt_file = '/home/tihonovcore/diploma/kotlin/idea/idea-core/src/org/jetbrains/kotlin/idea/core/util/PhysicalFileSystemUtils.kt'
     bash_compiler = '/bin/bash /home/tihonovcore/diploma/kotlin/dist/kotlinc/bin/kotlinc-jvm ' + _random_kt_file
 
-    use_leak_cheat = True
+    use_leak_cheat: bool = True
     if use_leak_cheat:
         kotlin_test_directory = join(root_path, 'tests.txt')

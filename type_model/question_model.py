@@ -18,7 +18,7 @@ class QuestionModel(keras.Model):
 
         self.question_count = Configuration.question_type_count
 
-        self.type_embeddings = TE(mode=mode)
+        self.type_embeddings: TE = TE(mode=mode)
 
         self.compose = layers.LSTM(type_embedding_dim, name='compose')
 
