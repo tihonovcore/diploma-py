@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from active_fit.communication import ResponseStatus
 from active_fit.loss.TreeGenerationLoss import TreeGenerationLoss
 from configuration import Configuration
 
@@ -11,7 +12,7 @@ class TypedTreeGenerationLoss(TreeGenerationLoss):
         self.all_predicted_types = []
         self.full_type_loss = tf.constant(0.0)
 
-    def eval_full_loss(self, status):
+    def eval_full_loss(self, status: ResponseStatus):
         super().eval_full_loss(status)
 
         with open(Configuration.cooperative__compared_types) as type_result_file:

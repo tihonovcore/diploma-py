@@ -1,18 +1,19 @@
 import tensorflow as tf
 
 from ModelMode import ModelMode
+from active_fit.io_utils import get_paths_to_snippets
 from active_fit.fit_environment.FitEnvironment import FitEnvironment
 from active_fit.fit_environment.TypedFitEnvironment import TypedFitEnvironment
 from configuration import Configuration
-from active_fit.io_utils import get_paths_to_snippets
 from path_model.TypedViaContextSLM import TypedViaContextSLM
 from path_model.TypedViaNodesSLM import TypedViaNodesSLM
 from path_model.UntypedSLM import UntypedSLM
 from type_model.question_model import QuestionModel
+from typing import List
 
 
 def initialize() -> FitEnvironment:
-    file_paths = get_paths_to_snippets()
+    file_paths: List[str] = get_paths_to_snippets()
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
 

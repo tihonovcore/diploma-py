@@ -1,6 +1,8 @@
 import tensorflow as tf
 
+from active_fit.communication import ResponseStatus
 from configuration import Configuration
+from tensorflow.python.framework.ops import EagerTensor
 
 
 class TreeGenerationLoss:
@@ -13,7 +15,7 @@ class TreeGenerationLoss:
 
         self.MIN_LG = 0.00001
 
-    def eval_full_loss(self, status):
+    def eval_full_loss(self, status: ResponseStatus):
         for ls in self.all_syntax_losses:
             self.full_syntax_loss = self.full_syntax_loss + ls
         self.full_syntax_loss = self.full_syntax_loss / Configuration.vocabulary_size
@@ -33,7 +35,7 @@ class TreeGenerationLoss:
     def get_full_loss(self):
         return self.full_syntax_loss + self.full_kind_loss
 
-    def syntax_loss(self, real, actual, weights):
+    def syntax_loss(self, real, actual, weights) -> EagerTensor:
         result = []
         for (a, w) in zip(actual, weights):
             result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w) + self.MIN_LG)))
