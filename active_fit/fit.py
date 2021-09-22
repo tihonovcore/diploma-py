@@ -12,7 +12,7 @@ from active_fit.predict import predict
 
 
 def fit(fit_environment: FitEnvironment):
-    file_paths, type_embeddings, slm, optimizer = fit_environment.values()
+    file_paths, slm, optimizer = fit_environment.values()
 
     for file_number, file_path in enumerate(file_paths):
         if file_number % 5 == 0:
@@ -26,7 +26,7 @@ def fit(fit_environment: FitEnvironment):
             status: ResponseStatus = call_kotlin_compiler(RequestType.EXTRACT_PATHS, file_path)
             while status is ResponseStatus.PATH:
                 request: List[str] = []
-                prepared_data: PreparedData = prepare_data(type_embeddings)
+                prepared_data: PreparedData = prepare_data(fit_environment)
                 predict(prepared_data, slm, loss, request)
 
                 print('##########')

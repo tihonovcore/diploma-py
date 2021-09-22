@@ -1,16 +1,28 @@
 import random
-from typing import List
-
-from actions.find_possible_children import get_weights_batch
-from configuration import Configuration
-from path_model.slm import SLM
-from active_fit.prepare_data import PreparedData
-from active_fit.loss import TreeGenerationLoss
-
 import tensorflow as tf
 
+from actions.find_possible_children import get_weights_batch
+from active_fit.loss import TreeGenerationLoss
+from active_fit.prepared_data.PreparedData import PreparedData
+from active_fit.prepared_data.TypedPreparedData import TypedPreparedData
+from configuration import Configuration
+from functools import singledispatch
+from path_model.abstract_slm import SLM
+from typing import List
 
-def predict(prepared_data: PreparedData, slm: SLM, loss: TreeGenerationLoss, request: List[str], depth: int = 0):
+
+@singledispatch
+def predict(prepared_data, slm: SLM, loss: TreeGenerationLoss, request: List[str], depth: int = 0):
+    raise Exception('not default implementation')
+
+
+@predict.register
+def _(prepared_data: PreparedData, slm: SLM, loss: TreeGenerationLoss, request: List[str], depth: int = 0):
+    raise Exception('not yet implemented')
+
+
+@predict.register
+def _(prepared_data: TypedPreparedData, slm: SLM, loss: TreeGenerationLoss, request: List[str], depth: int = 0):
     possible_children, impossible_children = get_weights_batch(prepared_data.composed, prepared_data.left_brothers)
     possible_children = possible_children[0]  # single element at batch
 

@@ -8,3 +8,6 @@ class ModelMode(Enum):
 
     def is_typed(self) -> bool:
         return self is ModelMode.TYPED__INJECTION_VIA_NODES or self is ModelMode.TYPED__INJECTION_VIA_CONTEXT
+
+    def to_string(self) -> str:
+        return str(self)[len('ModelMode.'):]

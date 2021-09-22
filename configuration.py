@@ -7,6 +7,8 @@ from ModelMode import ModelMode
 
 
 class Configuration:
+    model_mode: ModelMode = ModelMode.TYPED__INJECTION_VIA_NODES
+
     root_path: str = pathlib.Path(__file__).parent.absolute()
 
     parent_child_json = join(root_path, 'dataset', 'parentChild.json')
@@ -15,7 +17,7 @@ class Configuration:
     train_dataset_json = join(root_path, 'dataset', 'dataset.json')
     new_train_dataset_json = '/home/tihonovcore/diploma/kotlin/idea/tests/org/jetbrains/kotlin/diploma/out/integer'
 
-    saved_model: str = join(root_path, 'path_model', 'saved_model', 'weights')
+    saved_model: str = join(root_path, 'path_model', model_mode.to_string(), 'weights')
 
     print_shape: bool = False
 
@@ -91,5 +93,3 @@ class Configuration:
     use_leak_cheat: bool = True
     if use_leak_cheat:
         kotlin_test_directory = join(root_path, 'tests.txt')
-
-    model_mode: ModelMode = ModelMode.TYPED__INJECTION_VIA_NODES
