@@ -38,31 +38,3 @@ class TreeGenerationLoss:
         for (a, w) in zip(actual, weights):
             result.append(tf.reduce_sum(-tf.math.log(1 - tf.gather(a, w) + self.MIN_LG)))
         return tf.convert_to_tensor(result)
-
-
-class TypedTreeGenerationLoss(TreeGenerationLoss):
-    def __init__(self):
-        super().__init__()
-
-        self.all_predicted_types = []
-        self.full_type_loss = tf.constant(0.0)
-
-    def eval_full_loss(self, status):
-        super().eval_full_loss(status)
-
-        with open(Configuration.cooperative__compared_types) as type_result_file:
-            type_result = type_result_file.readlines()
-
-        for prob, result in zip(self.all_predicted_types, type_result):
-            if result == "true":
-                self.full_type_loss = self.full_type_loss - tf.math.log(prob + self.MIN_LG)
-            elif result == "false":
-                self.full_type_loss = self.full_type_loss - tf.math.log(1.0 - prob + self.MIN_LG)
-        # full_type_loss = full_type_loss / tf.constant(len(all_predicted_types), dtype='float32')
-
-    def print_loss(self):
-        super().print_loss()
-        print('types : %.4f' % self.full_type_loss.numpy())
-
-    def get_full_loss(self):
-        return super().get_full_loss() + self.full_type_loss
