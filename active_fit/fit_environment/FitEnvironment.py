@@ -1,5 +1,5 @@
 from active_fit.loss.TreeGenerationLoss import TreeGenerationLoss
-from path_model.slm import SLM
+from path_model.abstract_slm import SLM
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from typing import List
 
