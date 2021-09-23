@@ -26,8 +26,10 @@ class TypedViaNodesSLM(TypedSLM):
 
         self.print_shape = False
 
-        self.node_embedding = layers.Embedding(vocabulary_size, node_embedding_dim,
-                                               batch_input_shape=[batch_size, None])
+        self.node_embedding = layers.Embedding(
+            vocabulary_size, node_embedding_dim, batch_input_shape=[batch_size, None]
+        )
+
         self.lstm_1 = layers.LSTM(path_embedding_dim, return_sequences=True)
         self.lstm_2 = layers.LSTM(path_embedding_dim)
         self.transformer = keras.Sequential([Encoder(), Encoder(), Encoder(), Encoder()])

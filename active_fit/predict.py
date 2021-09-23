@@ -20,7 +20,55 @@ def predict(prepared_data, slm: SLM, loss: TreeGenerationLoss, request: List[str
 
 @predict.register
 def _(prepared_data: PreparedData, slm: SLM, loss: TreeGenerationLoss, request: List[str], depth: int = 0) -> int:
-    raise Exception('not yet implemented')
+    possible_children, impossible_children = get_weights_batch(prepared_data.composed, prepared_data.left_brothers)
+    possible_children = possible_children[0]  # single element at batch
+
+    _index_among_brothers = tf.constant(prepared_data.left_brothers.shape[0], shape=(1,))
+    reconstructed_kind = slm(
+        (
+            prepared_data.composed,
+            _index_among_brothers
+        )
+    )
+
+    syntax_ls: EagerTensor = loss.syntax_loss(None, reconstructed_kind, impossible_children)
+    loss.all_syntax_losses.append(syntax_ls)
+
+    reconstructed_kind: EagerTensor = tf.reshape(reconstructed_kind, (Configuration.vocabulary_size,))  # single element at batch
+
+    # todo: make probability less
+    al_probability: float = 1.0 * max(depth, prepared_data.left_brothers.shape[0])
+
+    if Configuration.string2integer['AFTER_LAST'] in possible_children and random.random() < al_probability:
+        kind_id: int = Configuration.string2integer['AFTER_LAST']
+    else:
+        kind_id_among_possible: int = random.randrange(len(possible_children))
+        kind_id: int = possible_children[kind_id_among_possible]
+
+    kind_str: str = Configuration.integer2string[kind_id]
+    print('%s from %d' % (kind_str, len(possible_children)))
+
+    kind_: EagerTensor = reconstructed_kind[kind_id]
+    loss.all_predicted_kinds.append(kind_)
+
+    request.append('{ "kind": "%s", "type": %d }' % (kind_str, 0))
+
+    if kind_str == 'AFTER_LAST':
+        return kind_id
+
+    composed: RaggedTensor = update_paths(prepared_data.composed, kind_id)
+    predicted_children: List[int] = []
+
+    while True:
+        prediction = predict(
+            prepared_data.updated(composed, tf.ragged.constant([predicted_children])), slm, loss, request, depth + 1
+        )
+
+        predicted_children.append(prediction)
+        if prediction == Configuration.string2integer['AFTER_LAST']:
+            break
+
+    return kind_id
 
 
 @predict.register
